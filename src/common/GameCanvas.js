@@ -220,6 +220,14 @@ export class GameCanvas {
     }
   }
 
+  getX( pointerX ) {
+    return pointerX / this.#scale + this.#offsetX;
+  }
+  
+  getY( pointerY ) {
+    return pointerY / this.#scale + this.#offsetY;
+  }
+
   //
   // Users override these functions
   //

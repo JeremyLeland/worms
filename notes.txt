@@ -23,3 +23,8 @@
       - Depends on Collisions, vec2, concept of player...leave it for now, revisit later
   
   - NOTE: Moving to its own repository "worms", since this is becoming more than another tile test
+
+  - Get rid of all the mouse state stuff in GameCanvas and just have it call to a single pointerInput( e ) 
+    - Caller can override this if they want pointer events
+    - We can keep gotcha fixes like preventDefault for wheel or whatever
+    - Just use existing mouse pointer state, we can track our own movement if we need to

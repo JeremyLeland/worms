@@ -280,27 +280,21 @@ keyInput.Actions = {
   ToggleUpdates: x => { if ( x ) gameCanvas.toggle() },
 };
 
-function pointerInput( m ) {
-  vec2.set( mousePos, m.x, m.y );
+document.addEventListener( 'pointerdown', pointerInput );
+document.addEventListener( 'pointerup', pointerInput );
+document.addEventListener( 'pointermove', pointerInput );
 
-  if ( m.buttons === 1 ) {
-    player.isShooting = true;
-  }
-  else {
-    player.isShooting = false;
-  }
+function pointerInput( e ) {
+  vec2.set( mousePos, gameCanvas.getX( e.x ), gameCanvas.getY( e.y ) );
 
-  if ( m.buttons === 2 ) {
+  player.isShooting = e.buttons & 1;
+
+  if ( e.buttons === 2 ) {
     vec2.copy( player.pos, mousePos );
-
     console.log( 'moved to ', player.pos );
   }
 
   // gameCanvas.redraw();
 }
-
-gameCanvas.pointerDown = pointerInput;
-gameCanvas.pointerMove = pointerInput;
-
 
 gameCanvas.start();
