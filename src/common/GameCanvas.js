@@ -15,8 +15,6 @@ export class GameCanvas {
   #offsetX = 0;
   #offsetY = 0;
 
-  #mouse = {};
-
   constructor( canvas ) {
     if ( canvas ) {
       this.canvas = canvas;
@@ -55,44 +53,6 @@ export class GameCanvas {
 
       this.redraw();
     } ).observe( this.canvas );
-
-    //
-    // Pointer input
-    //
-
-    this.canvas.addEventListener( 'pointerdown', e => {
-      this.#updatePointerInfo( e );
-      this.pointerDown( this.#mouse );
-    } );
-
-    this.canvas.addEventListener( 'pointermove', e => {
-      this.#updatePointerInfo( e );
-      this.pointerMove( this.#mouse );
-
-      // TODO: Do we need this? Why did we do this?
-      this.#mouse.dx = 0;
-      this.#mouse.dy = 0;
-    } );
-
-    this.canvas.addEventListener( 'pointerup', e => {
-      this.#updatePointerInfo( e );
-      this.pointerUp( this.#mouse );
-    } );
-
-    this.canvas.addEventListener( 'pointerout', e => {
-      this.#updatePointerInfo( e );
-      this.pointerUp( this.#mouse );
-    } );
-
-    this.canvas.addEventListener( 'wheel', e => {
-      this.#updatePointerInfo( e );
-      this.wheelInput( this.#mouse );
-
-      // TODO: Do we still need this?
-      this.#mouse.wheel = 0;
-
-      e.preventDefault();
-    } );
   }
 
   setBounds( x1, y1, x2, y2 ) {
@@ -123,30 +83,6 @@ export class GameCanvas {
     this.#offsetY = this.#bounds[ 1 ] + ( this.centerVertically ? ( minHeight - cssHeight / this.#scale ) / 2 : 0 );
   }
 
-  // TODO: Instead of doing all this, could we just have helper functions to getX() and getY()?
-
-  // Is this vulnerable to accidently being changed by handlers?
-  // Should these values be better protected somehow?
-
-  #updatePointerInfo( e ) {
-    // Do we need to invalidate existing mouse values anytime the scale and offsets change?
-    const lastX = this.#mouse.x ?? undefined;
-    const lastY = this.#mouse.y ?? undefined;
-
-    this.#mouse.x = e.pageX / this.#scale + this.#offsetX;
-    this.#mouse.y = e.pageY / this.#scale + this.#offsetY;
-
-    // Was there a reason we couldn't just use movementX/movementY here?
-    this.#mouse.dx = lastX ? this.#mouse.x - lastX : 0;
-    this.#mouse.dy = lastY ? this.#mouse.y - lastY : 0;
-
-    // Do we really need to save all this, or can caller handle their own events and just call getX/getY() for scale/offset?
-    this.#mouse.buttons = e.buttons;
-    this.#mouse.wheel = e.wheelDelta;
-    this.#mouse.shiftKey = e.shiftKey;
-    this.#mouse.ctrlKey = e.ctrlKey;
-    this.#mouse.altKey = e.altKey;
-  }
 
   //
   // Animation (update loop)
@@ -223,7 +159,7 @@ export class GameCanvas {
   getX( pointerX ) {
     return pointerX / this.#scale + this.#offsetX;
   }
-  
+
   getY( pointerY ) {
     return pointerY / this.#scale + this.#offsetY;
   }
@@ -233,9 +169,4 @@ export class GameCanvas {
   //
   update( dt ) {}
   draw( ctx ) {}
-
-  pointerDown( pointerInfo ) {}
-  pointerMove( pointerInfo ) {}
-  pointerUp( pointerInfo ) {}
-  wheelInput( pointerInfo ) {}
 }

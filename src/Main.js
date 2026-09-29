@@ -113,7 +113,7 @@ gameCanvas.update = ( dt ) => {
           //  - use the correct bestHit.line y based on orientation
           const testCol = Math.floor( bestHit.line[ 0 ] ) + ( entity.vel[ 0 ] < 0 ? -1 : 0 );
           const testRow = Math.floor( bestHit.line[ entity.vel[ 0 ] < 0 ? 1 : 3 ] ) - 1;
-          
+
           if ( 0 <= testRow && map.data[ testCol + testRow * map.cols ] == Terrain.Empty ) {
             entity.vel[ 1 ] = -PlayerMoveSpeed;   // TOOD: slower as we get toward top so we don't "hop" so much?
           }

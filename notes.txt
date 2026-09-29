@@ -1,3 +1,13 @@
+9/29:
+  - Getting rid of extra mouse stuff
+    - Just take it out of GameCanvas completely
+    - Ends up being more awkward, and only saves us a few lines of boilerplate
+      - Probably cleaner to just make these explicit
+  - Ninja rope
+    - Get distance and directional vector to rope head
+    - Apply velocity based on distance in direction of vector
+      - Kind of like my avoidance stuff?
+
 9/28:
   - DONE: Climb walls
     - Limit to 1 height
@@ -28,3 +38,10 @@
     - Caller can override this if they want pointer events
     - We can keep gotcha fixes like preventDefault for wheel or whatever
     - Just use existing mouse pointer state, we can track our own movement if we need to
+
+  - NEXT:
+    - Ninja rope?
+      - This is the most interesting part of the game, in terms of things I haven't done yet
+      - All the gun and bullet stuff I've written a dozen times
+      - Making and animating a player worm is a time sink
+        - I could just steal the existing graphics, but it'll probably still be a time sink
