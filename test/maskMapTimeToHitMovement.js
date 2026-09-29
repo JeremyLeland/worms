@@ -269,6 +269,11 @@ keyInput.Actions = {
   ToggleUpdates: x => { if ( x ) gameCanvas.toggle() },
 };
 
+
+document.addEventListener( 'pointerdown', pointerInput );
+document.addEventListener( 'pointerup', pointerInput );
+document.addEventListener( 'pointermove', pointerInput );
+
 function pointerInput( m ) {
   vec2.set( mousePos, m.x, m.y );
 
@@ -282,9 +287,6 @@ function pointerInput( m ) {
 
   // gameCanvas.redraw();
 }
-
-gameCanvas.pointerDown = pointerInput;
-gameCanvas.pointerMove = pointerInput;
 
 
 gameCanvas.start();
