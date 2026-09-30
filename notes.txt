@@ -4,6 +4,11 @@
       - This leads to too much movement along rope
       - Maybe I should see what the pendulum looks like
     - Support pendulum-like motion and add swing damping
+    - Got swing damping figured out
+    - Pendulum is closest, but current implementation treats rope like a solid rod
+      - Should be able to fall straight down, then swing
+        - Maybe we allow shorter rope, but prevent longer rope?
+          - Or stretch, but only if too long?
 
   - Walking
     - Detect if we are colliding with a floor or wall

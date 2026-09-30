@@ -31,7 +31,7 @@ const PlayerJumpSpeed = 0.1;
 const RopeSpringConstant = 0.00001;
 const RopeSpringDamping = 0.001;
 
-const RopeSwingDamping = 0.9;
+const RopeSwingDamping = 0.0005;
 
 const mousePos = [ 20.4, 20 ];
 
@@ -61,7 +61,10 @@ gameCanvas.update = ( dt ) => {
     // vec2.scaleAndAdd( player.vel, player.vel, ropeDir, force * dt );
 
     // Damping of swinging motion
-    // vec2.multiply( player.vel, player.vel, RopeSwingDamping * dt );
+    vec2.scale( player.vel, player.vel, Math.max( 0, 1 - RopeSwingDamping * dt ) );
+
+    // player.vel[0] *= Math.max(0, 1 - RopeSwingDamping * dt);
+    // player.vel[1] *= Math.max(0, 1 - RopeSwingDamping * dt);
   }
 
   vec2.scaleAndAdd( player.pos, player.pos, player.vel, dt );
@@ -104,6 +107,7 @@ function pointerInput( e ) {
   vec2.set( mousePos, gameCanvas.getX( e.x ), gameCanvas.getY( e.y ) );
 
   if ( e.buttons === 1 ) {
+    vec2.copy( player.rope.pos, mousePos );
   }
   else if ( e.buttons === 2 ) {
     vec2.copy( player.pos, mousePos );

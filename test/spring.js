@@ -31,6 +31,8 @@ const PlayerJumpSpeed = 0.1;
 const RopeSpringConstant = 0.00001;
 const RopeSpringDamping = 0.001;
 
+const RopeSwingDamping = 0.0005;
+
 const mousePos = [ 20.4, 20 ];
 
 
@@ -46,13 +48,15 @@ gameCanvas.update = ( dt ) => {
   const ropeDir = vec2.normalize( [], ropeVec );
   const ropeDist = vec2.length( ropeVec );
 
-  const displacement = ropeDist - player.rope.length;
+  const displacement = Math.max( 0, ropeDist - player.rope.length );
     
     const velocityAlongRope = vec2.dot( player.vel, ropeDir );
 
   const force = -RopeSpringConstant * displacement - RopeSpringDamping * velocityAlongRope;
 
   vec2.scaleAndAdd( player.vel, player.vel, ropeDir, force * dt );
+
+  vec2.scale( player.vel, player.vel, Math.max( 0, 1 - RopeSwingDamping * dt ) );
 
   vec2.scaleAndAdd( player.pos, player.pos, player.vel, dt );
 
@@ -94,6 +98,7 @@ function pointerInput( e ) {
   vec2.set( mousePos, gameCanvas.getX( e.x ), gameCanvas.getY( e.y ) );
 
   if ( e.buttons === 1 ) {
+    vec2.copy( player.rope.pos, mousePos );
   }
   else if ( e.buttons === 2 ) {
     vec2.copy( player.pos, mousePos );
