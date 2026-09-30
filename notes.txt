@@ -1,3 +1,19 @@
+9/30:
+  - Ninja rope
+    - Keep springy-ness for now, just have less of it
+      - This leads to too much movement along rope
+      - Maybe I should see what the pendulum looks like
+    - Support pendulum-like motion and add swing damping
+
+  - Walking
+    - Detect if we are colliding with a floor or wall
+      - If so, move along floor/wall by the move amount
+        - If we hit a corner, continue the rest of the move (if wall isn't too tall)
+          - This should move us at a steady speed along the edges of the blocks
+          - Should work for uphill and downhill
+      - If we are walking, then we can jump
+
+  
 9/29:
   - Getting rid of extra mouse stuff
     - Just take it out of GameCanvas completely
@@ -7,6 +23,13 @@
     - Get distance and directional vector to rope head
     - Apply velocity based on distance in direction of vector
       - Kind of like my avoidance stuff?
+    - Got a spring working pretty easily
+    - It's very bouncy, though. And not necessarily how a rope should behave, though it's hard to know outside of actual usage
+    - Might want something more like a pendulum
+    - Could get a better test if I can shoot rope within demo
+      - Just have it collide with ceiling
+      - Practice changing rope length
+      - Shoot new ropes while in the air
 
 9/28:
   - DONE: Climb walls

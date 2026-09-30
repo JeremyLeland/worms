@@ -31,6 +31,8 @@ const PlayerJumpSpeed = 0.1;
 const RopeSpringConstant = 0.00001;
 const RopeSpringDamping = 0.001;
 
+const RopeSwingDamping = 0.9;
+
 const mousePos = [ 20.4, 20 ];
 
 
@@ -43,16 +45,24 @@ gameCanvas.update = ( dt ) => {
   player.vel[ 1 ] += Gravity * dt;
 
   const ropeVec = vec2.subtract( [], player.pos, player.rope.pos );
-  const ropeDir = vec2.normalize( [], ropeVec );
+  // const ropeDir = vec2.normalize( [], ropeVec );
   const ropeDist = vec2.length( ropeVec );
 
-  const displacement = ropeDist - player.rope.length;
+  if ( ropeDist > 0.0001 ) {
+    const ropeDir = vec2.scale( [], ropeVec, 1 / ropeDist );  // cheaper than normalize?
     
+    // const displacement = ropeDist - player.rope.length;
+    
+    // Remove velocity that is trying to change rope length, only allow swinging
     const velocityAlongRope = vec2.dot( player.vel, ropeDir );
+    vec2.scaleAndAdd( player.vel, player.vel, ropeDir, -velocityAlongRope );
+    
+    // const force = -RopeSpringConstant * displacement - RopeSpringDamping * velocityAlongRope;
+    // vec2.scaleAndAdd( player.vel, player.vel, ropeDir, force * dt );
 
-  const force = -RopeSpringConstant * displacement - RopeSpringDamping * velocityAlongRope;
-
-  vec2.scaleAndAdd( player.vel, player.vel, ropeDir, force * dt );
+    // Damping of swinging motion
+    // vec2.multiply( player.vel, player.vel, RopeSwingDamping * dt );
+  }
 
   vec2.scaleAndAdd( player.pos, player.pos, player.vel, dt );
 
