@@ -16,7 +16,9 @@ let player = {
     length: 50,
   },
   radius: 8,
+  isMovingUp: false,
   isMovingLeft: false,
+  isMovingDown: false,
   isMovingRight: false,
   isJumping: false,
   health: 100,
@@ -40,7 +42,17 @@ const gameCanvas = new GameCanvas();
 gameCanvas.setBounds( 0, 0, 320, 240 );
 
 gameCanvas.update = ( dt ) => {
+  let ropeSpeed = 0;
 
+  // TODO: Use tanh here to deal with cases where we are close to min/max length?
+  if ( player.isMovingUp && player.rope.length > 10 ) {
+    ropeSpeed = -0.1;
+  }
+  else if ( player.isMovingDown && player.rope.length < 200 ) {
+    ropeSpeed = 0.1;
+  }
+
+  player.rope.length += ropeSpeed * dt;
 
   player.vel[ 1 ] += Gravity * dt;
 
@@ -50,26 +62,34 @@ gameCanvas.update = ( dt ) => {
 
   if ( ropeDist > player.rope.length ) {
     const ropeDir = vec2.scale( [], ropeVec, 1 / ropeDist );  // cheaper than normalize?
-    
-    // const displacement = ropeDist - player.rope.length;
-    
-    // Remove velocity that is trying to change rope length, only allow swinging
-    const velocityAlongRope = Math.max( 0, vec2.dot( player.vel, ropeDir ) );
-    vec2.scaleAndAdd( player.vel, player.vel, ropeDir, -velocityAlongRope );
-    
-    // const force = -RopeSpringConstant * displacement - RopeSpringDamping * velocityAlongRope;
-    // vec2.scaleAndAdd( player.vel, player.vel, ropeDir, force * dt );
 
-    // Damping of swinging motion
-    vec2.scale( player.vel, player.vel, Math.max( 0, 1 - RopeSwingDamping * dt ) );
+    // Put the player exactly on the rope (so we can shorten it up)
+    vec2.scaleAndAdd(
+      player.pos,
+      player.rope.pos,
+      ropeDir,
+      player.rope.length
+    );
 
-    // player.vel[0] *= Math.max(0, 1 - RopeSwingDamping * dt);
-    // player.vel[1] *= Math.max(0, 1 - RopeSwingDamping * dt);
+    // Radial velocity required by changing rope
+    const radialVelocity = vec2.dot( player.vel, ropeDir );   // velocity along rope
+    const radialError = radialVelocity - ropeSpeed;           // minus the amount needed to change rope size
+
+    vec2.scaleAndAdd( player.vel, player.vel, ropeDir, -radialError );
+    
+    // Damping of swinging motion (just the tangential component of movement)
+    const tangentX = -ropeDir[ 1 ];
+    const tangentY = ropeDir[ 0 ];
+    const tangentialVelocity = player.vel[ 0 ] * tangentX + player.vel[ 1 ] * tangentY;
+    const damping = Math.max( 0, 1 - RopeSwingDamping * dt );
+
+    const newTangentialVelocity = tangentialVelocity * damping;
+
+    player.vel[ 0 ] = ropeDir[ 0 ] * ropeSpeed + tangentX * newTangentialVelocity;
+    player.vel[ 1 ] = ropeDir[ 1 ] * ropeSpeed + tangentY * newTangentialVelocity;
   }
 
   vec2.scaleAndAdd( player.pos, player.pos, player.vel, dt );
-
-
 }
 
 gameCanvas.draw = ( ctx ) => {
@@ -85,14 +105,18 @@ gameCanvas.draw = ( ctx ) => {
 const keyInput = new KeyInput();
 
 keyInput.Keys = {
+  PlayerUp: 'w',
   PlayerLeft: 'a',
+  PlayerDown: 's',
   PlayerRight: 'd',
   PlayerJump: ' ',
   ToggleUpdates: 'p',
 };
 
 keyInput.Actions = {
+  PlayerUp:     x => player.isMovingUp = x,
   PlayerLeft:   x => player.isMovingLeft = x,
+  PlayerDown:   x => player.isMovingDown = x,
   PlayerRight:  x => player.isMovingRight = x,
   PlayerJump:   x => player.isJumping = x,
 

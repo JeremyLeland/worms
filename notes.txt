@@ -8,6 +8,19 @@
           - fixes falls, at least
           - maybe find way to shorten rope back up later?
     - How would we shorten/extend rope on demand?
+      - Interesting suggestion about placing player at end of where rope should be
+      - Then removing radial velocity, but keeping the change needed by the changing rope (to allow extension?)
+      - This works decently
+        - We overshoot when going up, though. 
+          - Every time we stop shortening, we keep moving up, then fall to proper length
+        - Also, we lost our ability to fall straight down (acting like rigid rod)
+        - It's a little jerky on the fall, too
+          - Rather than forcing us to be at the exact end of rope, would be nice to use a little spring to bring us back
+          - Maybe because rope is lengthing but we are moving with gravity?
+            - So slow at first, then faster, then sudden jerking stop at end of rope
+    - Eventually:
+      - Let us start swinging motion with left and right keys
+
 
 9/30:
   - Ninja rope
