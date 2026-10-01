@@ -48,13 +48,13 @@ gameCanvas.update = ( dt ) => {
   // const ropeDir = vec2.normalize( [], ropeVec );
   const ropeDist = vec2.length( ropeVec );
 
-  if ( ropeDist > 0.0001 ) {
+  if ( ropeDist > player.rope.length ) {
     const ropeDir = vec2.scale( [], ropeVec, 1 / ropeDist );  // cheaper than normalize?
     
     // const displacement = ropeDist - player.rope.length;
     
     // Remove velocity that is trying to change rope length, only allow swinging
-    const velocityAlongRope = vec2.dot( player.vel, ropeDir );
+    const velocityAlongRope = Math.max( 0, vec2.dot( player.vel, ropeDir ) );
     vec2.scaleAndAdd( player.vel, player.vel, ropeDir, -velocityAlongRope );
     
     // const force = -RopeSpringConstant * displacement - RopeSpringDamping * velocityAlongRope;

@@ -1,3 +1,14 @@
+10/1:
+  - Ninja rope
+    - DONE: Should be able to fall straight down
+      - Instead of removing velocity that is changing rope length...
+        - only remove velocity that is increasing rope length?
+          - that ends up with a short rope after the fall
+        - for now, only apply rope physics if rope length is greater than ideal length
+          - fixes falls, at least
+          - maybe find way to shorten rope back up later?
+    - How would we shorten/extend rope on demand?
+
 9/30:
   - Ninja rope
     - Keep springy-ness for now, just have less of it
