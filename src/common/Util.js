@@ -43,11 +43,11 @@ export function drawPoint( ctx, p, radius = 0.02 ) {
   ctx.fill();
 }
 
-export function drawText( ctx, text, x, y, fillStyle = 'white' ) {
+export function drawText( ctx, text, x, y, fillStyle = 'white', scale = 0.02 ) {
   ctx.save(); {
     // Firefox doesn't play nice with small font sizes, so scale it instead
     ctx.translate( x, y );
-    ctx.scale( 0.02, 0.02 );
+    ctx.scale( scale, scale );
     ctx.font = '10px Arial';
 
     ctx.fillStyle = fillStyle;

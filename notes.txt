@@ -1,3 +1,16 @@
+10/5:
+  - Trying to figure out if I want spring
+    - My warping clicks aren't the best test, since I will be launching new ropes and starting with that length
+    - Maybe I should calculate the length when I warp-spawn a new rope here?
+      - Sort of helps, but the rope limits still aren't adding up
+      - Sometimes if I click below player, I can't shorten as far as I should?
+      - Text on screen could be helpful in debugging this
+        - Don't want to go too far down a rabit hole here, but the debug info will be useful regardless
+
+    - I like the spring upwards if rope is too long (don't want it to push back if shorter)
+    - I like the arc of the pendulum swing, the spring seemed to make this jiggly before
+    - I want the tangential force to slow down the swing over time
+
 10/1:
   - Ninja rope
     - DONE: Should be able to fall straight down

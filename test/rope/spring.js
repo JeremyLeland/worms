@@ -1,10 +1,10 @@
 // Test out spring movement (for ninja rope)
 
-import { GameCanvas } from '../src/common/GameCanvas.js';
-import { KeyInput } from '../src/common/KeyInput.js';
-import * as Collisions from '../src/common/Collisions.js';
-import * as Util from '../src/common/Util.js';
-import { vec2 } from '../lib/gl-matrix.js';
+import { GameCanvas } from '../../src/common/GameCanvas.js';
+import { KeyInput } from '../../src/common/KeyInput.js';
+import * as Collisions from '../../src/common/Collisions.js';
+import * as Util from '../../src/common/Util.js';
+import { vec2 } from '../../lib/gl-matrix.js';
 
 
 let player = {
@@ -16,9 +16,7 @@ let player = {
     length: 50,
   },
   radius: 8,
-  isMovingUp: false,
   isMovingLeft: false,
-  isMovingDown: false,
   isMovingRight: false,
   isJumping: false,
   health: 100,
@@ -42,54 +40,27 @@ const gameCanvas = new GameCanvas();
 gameCanvas.setBounds( 0, 0, 320, 240 );
 
 gameCanvas.update = ( dt ) => {
-  let ropeSpeed = 0;
 
-  // TODO: Use tanh here to deal with cases where we are close to min/max length?
-  if ( player.isMovingUp && player.rope.length > 10 ) {
-    ropeSpeed = -0.1;
-  }
-  else if ( player.isMovingDown && player.rope.length < 200 ) {
-    ropeSpeed = 0.1;
-  }
-
-  player.rope.length += ropeSpeed * dt;
 
   player.vel[ 1 ] += Gravity * dt;
 
   const ropeVec = vec2.subtract( [], player.pos, player.rope.pos );
-  // const ropeDir = vec2.normalize( [], ropeVec );
+  const ropeDir = vec2.normalize( [], ropeVec );
   const ropeDist = vec2.length( ropeVec );
 
-  if ( ropeDist > player.rope.length ) {
-    const ropeDir = vec2.scale( [], ropeVec, 1 / ropeDist );  // cheaper than normalize?
-
-    // Put the player exactly on the rope (so we can shorten it up)
-    vec2.scaleAndAdd(
-      player.pos,
-      player.rope.pos,
-      ropeDir,
-      player.rope.length
-    );
-
-    // Radial velocity required by changing rope
-    const radialVelocity = vec2.dot( player.vel, ropeDir );   // velocity along rope
-    const radialError = radialVelocity - ropeSpeed;           // minus the amount needed to change rope size
-
-    vec2.scaleAndAdd( player.vel, player.vel, ropeDir, -radialError );
+  const displacement = Math.max( 0, ropeDist - player.rope.length );
     
-    // Damping of swinging motion (just the tangential component of movement)
-    const tangentX = -ropeDir[ 1 ];
-    const tangentY = ropeDir[ 0 ];
-    const tangentialVelocity = player.vel[ 0 ] * tangentX + player.vel[ 1 ] * tangentY;
-    const damping = Math.max( 0, 1 - RopeSwingDamping * dt );
+    const velocityAlongRope = vec2.dot( player.vel, ropeDir );
 
-    const newTangentialVelocity = tangentialVelocity * damping;
+  const force = -RopeSpringConstant * displacement - RopeSpringDamping * velocityAlongRope;
 
-    player.vel[ 0 ] = ropeDir[ 0 ] * ropeSpeed + tangentX * newTangentialVelocity;
-    player.vel[ 1 ] = ropeDir[ 1 ] * ropeSpeed + tangentY * newTangentialVelocity;
-  }
+  vec2.scaleAndAdd( player.vel, player.vel, ropeDir, force * dt );
+
+  vec2.scale( player.vel, player.vel, Math.max( 0, 1 - RopeSwingDamping * dt ) );
 
   vec2.scaleAndAdd( player.pos, player.pos, player.vel, dt );
+
+
 }
 
 gameCanvas.draw = ( ctx ) => {
@@ -105,18 +76,14 @@ gameCanvas.draw = ( ctx ) => {
 const keyInput = new KeyInput();
 
 keyInput.Keys = {
-  PlayerUp: 'w',
   PlayerLeft: 'a',
-  PlayerDown: 's',
   PlayerRight: 'd',
   PlayerJump: ' ',
   ToggleUpdates: 'p',
 };
 
 keyInput.Actions = {
-  PlayerUp:     x => player.isMovingUp = x,
   PlayerLeft:   x => player.isMovingLeft = x,
-  PlayerDown:   x => player.isMovingDown = x,
   PlayerRight:  x => player.isMovingRight = x,
   PlayerJump:   x => player.isJumping = x,
 
