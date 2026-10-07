@@ -16,10 +16,16 @@ const map = MaskMap.create( 320, 240, Terrain.Dirt );
 
 let player = {
   type: 'player',
-  pos: [ 30, 30 ],
+  pos: [ 200, 40 ],
   vel: [ 0, 0 ],
+  rope: {
+    pos: [ 200, 10 ],
+    length: 50,
+  },
   radius: 8,
+  isMovingUp: false,
   isMovingLeft: false,
+  isMovingDown: false,
   isMovingRight: false,
   isJumping: false,
   health: 100,
@@ -30,6 +36,11 @@ const debugInfo = {};
 const Gravity = 0.0005;
 const PlayerMoveSpeed = 0.03;
 const PlayerJumpSpeed = 0.1;
+const PlayerRopeNudgeSpeed = 0.001;
+
+const RopeSpringConstant = 0.0001;
+const RopeSpringDamping = 0.01;     // Critical Damping: 2 * sqrt( k * m ), trying 0.5 * critical damping
+const RopeSwingDamping = 0.0002;
 
 const mousePos = [ 20.4, 20 ];
 
@@ -68,16 +79,24 @@ gameCanvas.update = ( dt ) => {
   const newEntities = [];
 
   entities.forEach( entity => {
-    if ( entity.isMovingLeft !== undefined ) {
-      if ( entity.isMovingLeft ) {
-        entity.vel[ 0 ] = -PlayerMoveSpeed;
-      }
-      else if ( entity.isMovingRight ) {
-        entity.vel[ 0 ] = PlayerMoveSpeed;
-      }
-      else {
-        entity.vel[ 0 ] = 0;
-      }
+
+
+    // TODO: At some point, this will be dependent on us detecting that we are on the ground and in walking mode
+    // if ( entity.isMovingLeft !== undefined && entity.rope === undefined ) {
+    //   if ( entity.isMovingLeft ) {
+    //     entity.vel[ 0 ] = -PlayerMoveSpeed;
+    //   }
+    //   else if ( entity.isMovingRight ) {
+    //     entity.vel[ 0 ] = PlayerMoveSpeed;
+    //   }
+    //   else {
+    //     entity.vel[ 0 ] = 0;
+    //   }
+    // }
+
+    // Jumping cancels rope
+    if ( entity.rope && entity.isJumping ) {
+      delete entity.rope;
     }
 
     if ( entity.isShooting ) {
@@ -93,10 +112,78 @@ gameCanvas.update = ( dt ) => {
         radius: 1,
         health: 1,
       } );
+
+      // Recoil
+      vec2.scaleAndAdd( entity.vel, entity.vel, lineVec, -0.01 );
     }
 
 
-    entity.vel[ 1 ] += Gravity * dt;
+    //
+    // Apply forces
+    //
+    
+    const forces = vec2.fromValues( 0, Gravity );
+  
+    if ( entity.rope ) {
+
+      //
+      // Swing left or right
+      //
+
+      if ( entity.isMovingLeft ) {
+        entity.vel[ 0 ] -= PlayerRopeNudgeSpeed;
+      }
+      else if ( entity.isMovingRight ) {
+        entity.vel[ 0 ] += PlayerRopeNudgeSpeed;
+      }
+
+
+      //
+      // Change rope length
+      //
+      let ropeSpeed = 0;
+
+      // TODO: Use tanh here to deal with cases where we are close to min/max length?
+      if ( entity.isMovingUp && entity.rope.length > 10 ) {
+        ropeSpeed = -0.1;
+      }
+      else if ( entity.isMovingDown && entity.rope.length < 200 ) {
+        ropeSpeed = 0.1;
+      }
+
+      entity.rope.length += ropeSpeed * dt;
+
+
+      //
+      // Apply rope forces
+      //
+
+      const ropeVec = vec2.subtract( [], entity.pos, entity.rope.pos );
+      const ropeDist = vec2.length( ropeVec );
+    
+      if ( ropeDist > 0 ) {
+        const ropeDir = vec2.scale( [], ropeVec, 1 / ropeDist );  // cheaper than normalize?
+    
+        const velocityAlongRope = vec2.dot( entity.vel, ropeDir );
+        const radialError = velocityAlongRope - ropeSpeed;
+    
+        if ( ropeDist > entity.rope.length ) {
+          // Damped spring: F = -kx - cv
+          const displacement = Math.max( 0, ropeDist - entity.rope.length );
+          const springForce = -RopeSpringConstant * displacement - RopeSpringDamping * radialError;
+          
+          vec2.scaleAndAdd( forces, forces, ropeDir, springForce );
+        }
+    
+        const radialVelocity = vec2.scale( [], ropeDir, velocityAlongRope );    // TODO: or radialError?
+        const tangentialVelocity = vec2.subtract( [], entity.vel, radialVelocity );
+    
+        vec2.scaleAndAdd( forces, forces, tangentialVelocity, -RopeSwingDamping );
+      }
+    }
+  
+    vec2.scaleAndAdd( entity.vel, entity.vel, forces, dt );
+    // vec2.scaleAndAdd( entity.pos, entity.pos, entity.vel, dt );
 
     let timeLeft = dt;
 
@@ -168,6 +255,13 @@ gameCanvas.draw = ( ctx ) => {
     if ( entity.type === 'player' ) {
       ctx.fillStyle = 'green';
       Util.drawPoint( ctx, entity.pos, entity.radius );
+
+      if ( entity.rope ) {
+        ctx.strokeStyle = 'yellow';
+        ctx.lineWidth = 0.4;
+        Util.drawLine( ctx, entity.pos, entity.rope.pos );
+      }
+
       ctx.strokeStyle = 'red';
       ctx.lineWidth = 0.1;
       Util.drawLine( ctx, entity.pos, mousePos );
@@ -266,14 +360,18 @@ function getHit( map, entity, dt, debugCtx ) {
 const keyInput = new KeyInput();
 
 keyInput.Keys = {
+  PlayerUp: 'w',
   PlayerLeft: 'a',
+  PlayerDown: 's',
   PlayerRight: 'd',
   PlayerJump: ' ',
   ToggleUpdates: 'p',
 };
 
 keyInput.Actions = {
+  PlayerUp:     x => player.isMovingUp = x,
   PlayerLeft:   x => player.isMovingLeft = x,
+  PlayerDown:   x => player.isMovingDown = x,
   PlayerRight:  x => player.isMovingRight = x,
   PlayerJump:   x => player.isJumping = x,
 

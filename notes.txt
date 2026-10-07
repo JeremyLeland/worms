@@ -1,3 +1,6 @@
+10/6:
+  - Integrate rope forces into world update
+
 10/5:
   - Trying to figure out if I want spring
     - My warping clicks aren't the best test, since I will be launching new ropes and starting with that length
@@ -7,9 +10,15 @@
       - Text on screen could be helpful in debugging this
         - Don't want to go too far down a rabit hole here, but the debug info will be useful regardless
 
+    - Might also be nice to have value debugger for physics constants
+
     - I like the spring upwards if rope is too long (don't want it to push back if shorter)
     - I like the arc of the pendulum swing, the spring seemed to make this jiggly before
     - I want the tangential force to slow down the swing over time
+
+    - Got a decent looking rope!
+      - NEXT: Integrate it into world so we swing, but hit walls
+      - THEN: Initiate rope by shooting anchor until it hits a wall
 
 10/1:
   - Ninja rope
