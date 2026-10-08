@@ -16,18 +16,21 @@ const map = MaskMap.create( 320, 240, Terrain.Dirt );
 
 let player = {
   type: 'player',
+  id: 'player1',
   pos: [ 200, 40 ],
   vel: [ 0, 0 ],
-  rope: {
-    pos: [ 200, 10 ],
-    length: 50,
-  },
+  // rope: {
+  //   pos: [ 200, 10 ],
+  //   length: 50,
+  // },
   radius: 8,
   isMovingUp: false,
   isMovingLeft: false,
   isMovingDown: false,
   isMovingRight: false,
   isJumping: false,
+  isShooting: false,
+  isShootingRope: false,
   health: 100,
 };
 
@@ -37,6 +40,11 @@ const Gravity = 0.0005;
 const PlayerMoveSpeed = 0.03;
 const PlayerJumpSpeed = 0.1;
 const PlayerRopeNudgeSpeed = 0.001;
+const PlayerRopeLengthSpeed = 0.075;
+
+
+const BulletSpeed = 0.5;
+const RopeSpeed = 0.4;
 
 const RopeSpringConstant = 0.0001;
 const RopeSpringDamping = 0.01;     // Critical Damping: 2 * sqrt( k * m ), trying 0.5 * critical damping
@@ -101,20 +109,36 @@ gameCanvas.update = ( dt ) => {
 
     if ( entity.isShooting ) {
       const lineAngle = Math.atan2( mousePos[ 1 ] - entity.pos[ 1 ], mousePos[ 0 ] - entity.pos[ 0 ] );
-      const bulletSpeed = 0.4;
-
       const lineVec = [ Math.cos( lineAngle ), Math.sin( lineAngle ) ];
 
       newEntities.push( {
         type: 'bullet',
         pos: vec2.scaleAndAdd( [], entity.pos, lineVec, entity.radius ),
-        vel: vec2.scale( [], lineVec, bulletSpeed ),
+        vel: vec2.scale( [], lineVec, BulletSpeed ),
         radius: 1,
         health: 1,
       } );
 
       // Recoil
       vec2.scaleAndAdd( entity.vel, entity.vel, lineVec, -0.01 );
+    }
+
+    if ( entity.isShootingRope ) {
+      delete entity.rope;
+
+      const lineAngle = Math.atan2( mousePos[ 1 ] - entity.pos[ 1 ], mousePos[ 0 ] - entity.pos[ 0 ] );
+      const lineVec = [ Math.cos( lineAngle ), Math.sin( lineAngle ) ];
+
+      newEntities.push( {
+        type: 'rope',
+        pos: vec2.scaleAndAdd( [], entity.pos, lineVec, entity.radius ),
+        vel: vec2.scale( [], lineVec, RopeSpeed ),
+        radius: 1,
+        health: 1,
+        parentId: entity.id,
+      } );
+
+      entity.isShootingRope = false;  // one rope per right-click
     }
 
 
@@ -145,10 +169,10 @@ gameCanvas.update = ( dt ) => {
 
       // TODO: Use tanh here to deal with cases where we are close to min/max length?
       if ( entity.isMovingUp && entity.rope.length > 10 ) {
-        ropeSpeed = -0.1;
+        ropeSpeed = -PlayerRopeLengthSpeed;
       }
       else if ( entity.isMovingDown && entity.rope.length < 200 ) {
-        ropeSpeed = 0.1;
+        ropeSpeed = PlayerRopeLengthSpeed;
       }
 
       entity.rope.length += ropeSpeed * dt;
@@ -227,6 +251,18 @@ gameCanvas.update = ( dt ) => {
           entity.health = 0;
 
           MaskMap.setTerrainCircle( map, entity.pos[ 0 ], entity.pos[ 1 ], entity.radius * 4, Terrain.Empty );
+          break;
+        }
+        else if ( entity.type === 'rope' ) {
+          entity.health = 0;
+
+          const parent = entities.find( e => e.id === entity.parentId );
+          if ( parent ) {
+            parent.rope = {
+              pos: entity.pos,
+              length: vec2.distance( parent.pos, entity.pos ),
+            };
+          }
         }
       }
       else {
@@ -257,9 +293,7 @@ gameCanvas.draw = ( ctx ) => {
       Util.drawPoint( ctx, entity.pos, entity.radius );
 
       if ( entity.rope ) {
-        ctx.strokeStyle = 'yellow';
-        ctx.lineWidth = 0.4;
-        Util.drawLine( ctx, entity.pos, entity.rope.pos );
+        drawRope( ctx, entity.pos, entity.rope.pos );
       }
 
       ctx.strokeStyle = 'red';
@@ -270,7 +304,21 @@ gameCanvas.draw = ( ctx ) => {
       ctx.fillStyle = 'white';
       Util.drawPoint( ctx, entity.pos, entity.radius );
     }
+    else if ( entity.type === 'rope' ) {
+      const parent = entities.find( e => e.id === entity.parentId );
+      if ( parent ) {
+        drawRope( ctx, parent.pos, entity.pos );
+      }
+    }
   } );
+}
+
+function drawRope( ctx, from, to ) {
+  ctx.fillStyle = ctx.strokeStyle = 'yellow';
+  Util.drawPoint( ctx, to, 1 );
+
+  ctx.lineWidth = 0.4;
+  Util.drawLine( ctx, from, to );
 }
 
 function getHit( map, entity, dt, debugCtx ) {
@@ -378,21 +426,18 @@ keyInput.Actions = {
   ToggleUpdates: x => { if ( x ) gameCanvas.toggle() },
 };
 
-document.addEventListener( 'pointerdown', pointerInput );
-document.addEventListener( 'pointerup', pointerInput );
-document.addEventListener( 'pointermove', pointerInput );
-
-function pointerInput( e ) {
-  vec2.set( mousePos, gameCanvas.getX( e.x ), gameCanvas.getY( e.y ) );
-
+document.addEventListener( 'pointerdown', e => {
   player.isShooting = e.buttons & 1;
+  player.isShootingRope = e.buttons & 2;
+} );
 
-  if ( e.buttons === 2 ) {
-    vec2.copy( player.pos, mousePos );
-    console.log( 'moved to ', player.pos );
-  }
+document.addEventListener( 'pointerup', e => {
+  player.isShooting = e.buttons & 1;
+  // isShootingRope should be cleared once rope is shot
+} );
 
-  // gameCanvas.redraw();
-}
+document.addEventListener( 'pointermove', e => {
+  vec2.set( mousePos, gameCanvas.getX( e.x ), gameCanvas.getY( e.y ) );
+} );
 
 gameCanvas.start();
