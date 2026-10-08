@@ -1,3 +1,7 @@
+10/7:
+  - DONE: Shoot rope with right click
+    - Got it working. Looks pretty good! Can web-sling like spiderman, then lower down a hole to shoot and pop back up
+
 10/6:
   - Integrate rope forces into world update
 

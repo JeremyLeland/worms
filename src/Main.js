@@ -79,6 +79,8 @@ const foregroundCtx = foregroundImage.getContext( '2d' );
 foregroundCtx.fillStyle = 'rgb(200, 100, 20)';
 foregroundCtx.fillRect( 0, 0, map.cols, map.rows );
 
+const shadowLayerImage = new OffscreenCanvas( map.cols, map.rows );
+const shadowLayerCtx = shadowLayerImage.getContext( '2d' );
 
 const gameCanvas = new GameCanvas();
 gameCanvas.setBounds( 0, 0, map.cols, map.rows );
@@ -281,21 +283,36 @@ gameCanvas.update = ( dt ) => {
 }
 
 gameCanvas.draw = ( ctx ) => {
-  MaskMap.makeMaskTransparent( foregroundCtx, map, Terrain.Empty );
-
+  ctx.shadowColor = 'transparent';
   ctx.imageSmoothingEnabled = false;
   ctx.drawImage( backgroundImage, 0, 0 );
-  ctx.drawImage( foregroundImage, 0, 0 );
 
+  shadowLayerCtx.clearRect( 0, 0, map.cols, map.rows );
+  
+  MaskMap.makeMaskTransparent( foregroundCtx, map, Terrain.Empty );
+  shadowLayerCtx.drawImage( foregroundImage, 0, 0 );
+
+  drawEntities( shadowLayerCtx, entities );
+
+  ctx.shadowColor = '#0009';
+  ctx.shadowOffsetX = -9;
+  ctx.shadowOffsetY = 9;
+  ctx.shadowBlur = 0;
+  
+  ctx.drawImage( shadowLayerImage, 0, 0 );
+}
+
+function drawEntities( ctx, entities ) {
   entities.forEach( entity => {
     if ( entity.type === 'player' ) {
-      ctx.fillStyle = 'green';
-      Util.drawPoint( ctx, entity.pos, entity.radius );
-
       if ( entity.rope ) {
         drawRope( ctx, entity.pos, entity.rope.pos );
       }
+      
+      ctx.fillStyle = 'green';
+      Util.drawPoint( ctx, entity.pos, entity.radius );
 
+      
       ctx.strokeStyle = 'red';
       ctx.lineWidth = 0.1;
       Util.drawLine( ctx, entity.pos, mousePos );
