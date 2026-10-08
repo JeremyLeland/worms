@@ -44,11 +44,14 @@ const PlayerRopeLengthSpeed = 0.075;
 
 
 const BulletSpeed = 0.5;
+const BulletRecoil = 0.01;
 const RopeSpeed = 0.4;
+const CasingSpeed = 0.1;
+const CasingRotSpeed = 0.02;
 
 const RopeSpringConstant = 0.0001;
 const RopeSpringDamping = 0.01;     // Critical Damping: 2 * sqrt( k * m ), trying 0.5 * critical damping
-const RopeSwingDamping = 0.0002;
+const RopeSwingDamping = 0.001;
 
 const mousePos = [ 20.4, 20 ];
 
@@ -110,19 +113,36 @@ gameCanvas.update = ( dt ) => {
     }
 
     if ( entity.isShooting ) {
+      // Bullet first...
       const lineAngle = Math.atan2( mousePos[ 1 ] - entity.pos[ 1 ], mousePos[ 0 ] - entity.pos[ 0 ] );
       const lineVec = [ Math.cos( lineAngle ), Math.sin( lineAngle ) ];
 
       newEntities.push( {
         type: 'bullet',
         pos: vec2.scaleAndAdd( [], entity.pos, lineVec, entity.radius ),
-        vel: vec2.scale( [], lineVec, BulletSpeed ),
+        vel: vec2.scaleAndAdd( [], entity.vel, lineVec, BulletSpeed ),
         radius: 1,
         health: 1,
       } );
 
-      // Recoil
-      vec2.scaleAndAdd( entity.vel, entity.vel, lineVec, -0.01 );
+      // ...then recoil...
+      vec2.scaleAndAdd( entity.vel, entity.vel, lineVec, -BulletRecoil );
+
+      // ...then casing (so it includes recoil)
+      const isFacingLeft = lineAngle < -Math.PI / 2 || Math.PI / 2 < lineAngle;
+
+      const casingAngle = lineAngle + 2 * ( isFacingLeft ? 1 : -1 );
+      const casingVec = [ Math.cos( casingAngle ), Math.sin( casingAngle ) ];
+
+      newEntities.push( {
+        type: 'casing',
+        pos: vec2.clone( entity.pos ),
+        vel: vec2.scaleAndAdd( [], entity.vel, casingVec, ( 0.75 + 0.5 * Math.random() ) * CasingSpeed ),
+        rot: lineAngle + ( -0.5 + Math.random() ) * 1,
+        rotVel: ( isFacingLeft ? 1 : -1 ) * ( 0.75 + 0.5 * Math.random() ) * CasingRotSpeed,
+        radius: 1,
+        health: 1,
+      } );
     }
 
     if ( entity.isShootingRope ) {
@@ -135,6 +155,8 @@ gameCanvas.update = ( dt ) => {
         type: 'rope',
         pos: vec2.scaleAndAdd( [], entity.pos, lineVec, entity.radius ),
         vel: vec2.scale( [], lineVec, RopeSpeed ),
+        rot: 0,
+        rotVel: 0.001,
         radius: 1,
         health: 1,
         parentId: entity.id,
@@ -209,6 +231,11 @@ gameCanvas.update = ( dt ) => {
     }
   
     vec2.scaleAndAdd( entity.vel, entity.vel, forces, dt );
+
+    if ( entity.rotVel ) {
+      entity.rot += entity.rotVel * dt;
+    }
+
     // vec2.scaleAndAdd( entity.pos, entity.pos, entity.vel, dt );
 
     let timeLeft = dt;
@@ -253,6 +280,10 @@ gameCanvas.update = ( dt ) => {
           entity.health = 0;
 
           MaskMap.setTerrainCircle( map, entity.pos[ 0 ], entity.pos[ 1 ], entity.radius * 4, Terrain.Empty );
+          break;
+        }
+        else if ( entity.type === 'casing' ) {
+          entity.rotVel = 0;
           break;
         }
         else if ( entity.type === 'rope' ) {
@@ -323,6 +354,16 @@ function drawEntities( ctx, entities ) {
     else if ( entity.type === 'bullet' ) {
       ctx.fillStyle = 'white';
       Util.drawPoint( ctx, entity.pos, entity.radius );
+    }
+    else if ( entity.type === 'casing' ) {
+      ctx.save(); {
+        ctx.translate( ...entity.pos );
+        ctx.rotate( entity.rot );
+
+        ctx.fillStyle = 'tan';
+        ctx.fillRect( -1, -0.5, 2, 1 );
+      }
+      ctx.restore();
     }
     else if ( entity.type === 'rope' ) {
       const parent = entities.find( e => e.id === entity.parentId );
