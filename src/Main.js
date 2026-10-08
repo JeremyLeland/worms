@@ -79,8 +79,8 @@ const foregroundCtx = foregroundImage.getContext( '2d' );
 foregroundCtx.fillStyle = 'rgb(200, 100, 20)';
 foregroundCtx.fillRect( 0, 0, map.cols, map.rows );
 
-const shadowLayerImage = new OffscreenCanvas( map.cols, map.rows );
-const shadowLayerCtx = shadowLayerImage.getContext( '2d' );
+// const shadowLayerImage = new OffscreenCanvas( map.cols, map.rows );
+// const shadowLayerCtx = shadowLayerImage.getContext( '2d' );
 
 const gameCanvas = new GameCanvas();
 gameCanvas.setBounds( 0, 0, map.cols, map.rows );
@@ -287,19 +287,21 @@ gameCanvas.draw = ( ctx ) => {
   ctx.imageSmoothingEnabled = false;
   ctx.drawImage( backgroundImage, 0, 0 );
 
-  shadowLayerCtx.clearRect( 0, 0, map.cols, map.rows );
+  // shadowLayerCtx.clearRect( 0, 0, map.cols, map.rows );
   
   MaskMap.makeMaskTransparent( foregroundCtx, map, Terrain.Empty );
-  shadowLayerCtx.drawImage( foregroundImage, 0, 0 );
+  // shadowLayerCtx.drawImage( foregroundImage, 0, 0 );
+  ctx.drawImage( foregroundImage, 0, 0 );
 
-  drawEntities( shadowLayerCtx, entities );
+  drawEntities( ctx, entities );
+  // drawEntities( shadowLayerCtx, entities );
 
-  ctx.shadowColor = '#0009';
-  ctx.shadowOffsetX = -9;
-  ctx.shadowOffsetY = 9;
-  ctx.shadowBlur = 0;
+  // ctx.shadowColor = '#0009';
+  // ctx.shadowOffsetX = -9;
+  // ctx.shadowOffsetY = 9;
+  // ctx.shadowBlur = 0;
   
-  ctx.drawImage( shadowLayerImage, 0, 0 );
+  // ctx.drawImage( shadowLayerImage, 0, 0 );
 }
 
 function drawEntities( ctx, entities ) {
@@ -316,6 +318,7 @@ function drawEntities( ctx, entities ) {
       ctx.strokeStyle = 'red';
       ctx.lineWidth = 0.1;
       Util.drawLine( ctx, entity.pos, mousePos );
+      // Util.drawLinePixel( ctx, entity.pos, mousePos, 'red' );
     }
     else if ( entity.type === 'bullet' ) {
       ctx.fillStyle = 'white';
@@ -336,6 +339,7 @@ function drawRope( ctx, from, to ) {
 
   ctx.lineWidth = 0.4;
   Util.drawLine( ctx, from, to );
+  // Util.drawLinePixel( ctx, from, to );
 }
 
 function getHit( map, entity, dt, debugCtx ) {

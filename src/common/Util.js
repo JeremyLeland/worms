@@ -37,6 +37,43 @@ export function drawLine2( ctx, line, showNormal = false ) {
   }
 }
 
+export function drawLinePixel( ctx, start, end, color ) {
+  // Bresenham's algorithm?
+
+  ctx.fillStyle = color;
+
+  // TODO: Round or floor?
+  let x0 = Math.floor( start[ 0 ] );
+  let y0 = Math.floor( start[ 1 ] );
+  const x1 = Math.floor( end[ 0 ] );
+  const y1 = Math.floor( end[ 1 ] );
+
+  const dx = Math.abs( x1 - x0 );
+  const dy = Math.abs( y1 - y0 );
+  const sx = x0 < x1 ? 1 : -1;
+  const sy = y0 < y1 ? 1 : -1;
+  let err = dx - dy;
+
+  for ( let timeout = 0; timeout < 1000; timeout ++ ) {
+    // TODO: get/putImageData here instead?
+    ctx.fillRect( x0, y0, 1, 1 );
+
+    if ( x0 === x1 && y0 === y1 ) break;
+
+    const e2 = 2 * err;
+
+    if ( e2 > -dy ) {
+      err -= dy;
+      x0 += sx;
+    }
+
+    if ( e2 < dx ) {
+      err += dx;
+      y0 += sy;
+    }
+  }
+}
+
 export function drawPoint( ctx, p, radius = 0.02 ) {
   ctx.beginPath();
   ctx.arc( p[ 0 ], p[ 1 ], radius, 0, Math.PI * 2 );
