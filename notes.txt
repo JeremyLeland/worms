@@ -3,6 +3,18 @@
     - This will take some consideration, not feeling it just yet
     - Play with shell casings today?
   - DONE: Create shell casings when shooting
+
+  - Now that we're sending out bullets and casings, might be a good time to implement delays/reloading/etc
+    - differentiate between bullets per clip and number of clips supported?
+      - rifle can have 30 bullets in one clip
+      - shotgun can have 1 bullet in 8 "clips"
+      - reload time can be per clip, allowing interruption of currently reloading clip to fire
+        - so we can reload shotgun one shell at a time, but stop reloading to shoot current clips
+
+  - Walking
+    - Move the wall testing to walk section?
+    - Handle our falling movement first, then see if we are on the ground
+      - If we're on the ground, walk/jump
   
 10/7:
   - DONE: Shoot rope with right click
