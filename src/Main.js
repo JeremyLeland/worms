@@ -94,17 +94,17 @@ gameCanvas.update = ( dt ) => {
 
 
     // TODO: At some point, this will be dependent on us detecting that we are on the ground and in walking mode
-    // if ( entity.isMovingLeft !== undefined && entity.rope === undefined ) {
-    //   if ( entity.isMovingLeft ) {
-    //     entity.vel[ 0 ] = -PlayerMoveSpeed;
-    //   }
-    //   else if ( entity.isMovingRight ) {
-    //     entity.vel[ 0 ] = PlayerMoveSpeed;
-    //   }
-    //   else {
-    //     entity.vel[ 0 ] = 0;
-    //   }
-    // }
+    if ( entity.type === 'player' && entity.rope === undefined ) {
+      if ( entity.isMovingLeft ) {
+        entity.vel[ 0 ] = -PlayerMoveSpeed;
+      }
+      else if ( entity.isMovingRight ) {
+        entity.vel[ 0 ] = PlayerMoveSpeed;
+      }
+      else {
+        entity.vel[ 0 ] = 0;
+      }
+    }
 
     // Jumping cancels rope
     if ( entity.rope && entity.isJumping ) {
@@ -254,7 +254,8 @@ gameCanvas.update = ( dt ) => {
           const testRow = Math.floor( bestHit.line[ entity.vel[ 0 ] < 0 ? 1 : 3 ] ) - 1;
 
           if ( 0 <= testRow && map.data[ testCol + testRow * map.cols ] == Terrain.Empty ) {
-            entity.vel[ 1 ] = -PlayerMoveSpeed;   // TOOD: slower as we get toward top so we don't "hop" so much?
+            // TOOD: slower as we get toward top so we don't "hop" so much?
+            entity.vel[ 1 ] = entity.isJumping ? -PlayerJumpSpeed : -PlayerMoveSpeed;
           }
 
           entity.vel[ 0 ] = 0;
