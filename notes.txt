@@ -1,3 +1,25 @@
+10/13:
+  - Want to try "sticking" to floors/walls
+    - Find closest point of wall
+      - Find normal
+        - Return as part of collision info?
+          - Since I already calculate all this stuff in my lower level collision functions...
+            - ...maybe I should just surface it
+            - I avoided this before because I was trying to reduce object creation
+              - but that's premature optimization based on soley on superstition
+              - Having the information is valuable
+                - Maybe better to hand it an object to use if I want to avoid creation
+                - But cross that road later
+            - It's enough of a breaking change that I could try this in a branch
+      - Debug draw the point and normal for now
+      - Pull us along that normal so we're at distance 0
+      - If we are moving, move perpendicular to that normal
+        - Confusing for ceiling, but should be fine for left and right walls
+        - Should help us move around the corner
+    - Break the stick by jumping
+      - For game, ultimately still just straight up
+      - For practice, could jump in direction of normal
+  
 10/8:
   - Rope feels good, need to fix walking
     - This will take some consideration, not feeling it just yet
@@ -15,6 +37,28 @@
     - Move the wall testing to walk section?
     - Handle our falling movement first, then see if we are on the ground
       - If we're on the ground, walk/jump
+    - Supporting walking up a large wall (over multiple updates) is tougher
+      - After initial hit to wall and begin to climb, I don't detect further hits, so I fall
+    - I can fix jumps with current walking by allowing jumps when walking up wall
+      - This is still jerky because it'll send me further up wall than I need to
+        - Need to detect how long it takes to climb wall, then only update that far
+        - Could be arguement for having walking be a separate part of update after we hit a wall
+          - Maybe we break out of initial physics update if we detect floor/wall and are walking
+            - So let us fall if we hit wall in air, but stop as soon as we have firm ground
+            - We still want the collision detection from physics, though...
+    
+    - Walking test
+      - Uphill gets stuck on corners
+        - It's detecting floor first, then wall
+          - Instead of zeroing x or y based on wall/ceiling...
+            - ...should we reduce them based on angle to hit point?
+      - Not sure exactly what ends up being useful here, but try making climbing up and down big staircase work
+        - Later try smaller boxes and bigger player to get a close-up of how movement looks
+
+    - Walking uphill can detect that we're pushing into a wall and move smoothly instead
+      - How do we detect walking downhill? How is that different than hurling ourselves off a cliff?
+        - We could check our center - radius (or + radius) against the map
+          - sort of like with the golf game? A distance check against map for rolling, if not then do physics?
   
 10/7:
   - DONE: Shoot rope with right click
