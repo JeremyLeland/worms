@@ -21,7 +21,9 @@ export function timeToCircleHitLine( x, y, dx, dy, radius, x1, y1, x2, y2 ) {
   // Don't consider it a hit if we are moving away or parallel
   const vDotN = dx * normX + dy * normY;
   if ( vDotN >= 0 ) {
-    return Infinity;
+    return {
+      time: Infinity,
+    };
   }
 
   const distFromLine = ( x1 - x ) * normX + ( y1 - y ) * normY;
@@ -39,26 +41,52 @@ export function timeToCircleHitLine( x, y, dx, dy, radius, x1, y1, x2, y2 ) {
   if ( closestOnLine <= 0 - radius / len || 1 + radius / len <= closestOnLine ) {
 
     // console.log( '   barely touching case, returning Infinity' );
-    return Infinity;
+    return {
+      time: Infinity,
+    };
   }
 
   if ( closestOnLine <= 0 ) {
-    // console.log( '   hitting left of line' );
-    return timeToCircleHitPoint( x, y, dx, dy, radius, x1, y1 );
+    console.log( '   hitting left of line' );
+
+    const hitTime = timeToCircleHitPoint( x, y, dx, dy, radius, x1, y1 );
+    const hitX = x + dx * hitTime;
+    const hitY = y + dy * hitTime;
+
+    return {
+      time: hitTime,
+      pos: [ x1, y1 ],
+      norm: [ ( hitX - x1 ) / radius, ( hitY - y1 ) / radius ],
+    }
   }
   else if ( 1 <= closestOnLine ) {
-    // console.log( '   hitting right of line' );
-    return timeToCircleHitPoint( x, y, dx, dy, radius, x2, y2 );
+    console.log( '   hitting right of line' );
+
+    const hitTime = timeToCircleHitPoint( x, y, dx, dy, radius, x2, y2 );
+    const hitX = x + dx * hitTime;
+    const hitY = y + dy * hitTime;
+
+    return {
+      time: hitTime,
+      pos: [ x2, y2 ],
+      norm: [ ( hitX - x2 ) / radius, ( hitY - y2 ) / radius ],
+    }
   }
   else {
-    // console.log( '   hitting within line' );
+    console.log( '   hitting within line' );
 
     // For our purposes, we don't care about collisions in the past
     if ( hitTime < -EPSILON ) {
-      return Infinity;
+      return {
+        time: Infinity,
+      };
     }
     else {
-      return hitTime;
+      return {
+        time: hitTime,
+        pos: [ hitX, hitY ],
+        norm: [ normX, normY ],
+      };
     }
   }
 }
@@ -82,7 +110,7 @@ function timeToCircleHitPoint( x, y, dx, dy, radius, cx, cy ) {
 // NOTE: This solver assumes we only want positive values (and returns Infinity if none available)
 
 function solveQuadratic( A, B, C ) {
-  // console.log( `   solveQuadratic( ${ A }, ${ B }, ${ C } )` );
+  console.log( `   solveQuadratic( ${ A }, ${ B }, ${ C } )` );
 
   if ( Math.abs( A ) < EPSILON ) {
     // console.log( '    A ~= 0' );

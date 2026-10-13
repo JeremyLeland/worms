@@ -19,6 +19,26 @@
     - Break the stick by jumping
       - For game, ultimately still just straight up
       - For practice, could jump in direction of normal
+
+    - Collision changes
+      - Making the circleVsLine collision return hitInfo with time, pos, and norm
+      - Don't really need the line with that info, since all we used that for was the normal
+      Worms.getHit can just return the best hit it gets from collisions, I think
+
+    - Got this seeming to work while moving off an edge, but...
+      - Why is it not moving up an edge?
+        - Now it's not moving anywhere
+          - The first hit is time 0, the next hit is time -0
+            - Can I use that negative? 
+            - Should I be returning an infinity someplace? 
+            - Does some normal or dot product help me here?
+          - Is this where we need to ignore this line because we're already hitting it?
+          - Or is this where we need to move back so we aren't colliding?
+      - Why is bestHit.pos in the middle of player sometimes?
+
+    - We really need separate forms of collision detection for this
+      - Moving around the endpoints is going to keep saying it's colliding and stop it
+
   
 10/8:
   - Rope feels good, need to fix walking

@@ -50,7 +50,6 @@ export function getHit( map, entity, dt, debugCtx ) {
 
   let bestHit = {
     time: Infinity,
-    line: null,
   };
 
   const goalPos = vec2.scaleAndAdd( [], entity.pos, entity.vel, dt );
@@ -98,16 +97,16 @@ export function getHit( map, entity, dt, debugCtx ) {
         ];
 
         lines.forEach( line => {
-          const hitTime = Collisions.timeToCircleHitLine( x, y, dx, dy, r, ...line );
+          const hit = Collisions.timeToCircleHitLine( x, y, dx, dy, r, ...line );
 
           // if ( hitTime < Infinity ) {
           //   console.log( '  hitTime for ', line, ' is ', hitTime );
           // }
 
           // Make sure hitTime is within our update window, helps avoid other weirdness
-          if ( hitTime < bestHit.time && hitTime < dt ) {
-            bestHit.time = hitTime;
-            bestHit.line = line;
+          if ( hit.time < bestHit.time && hit.time < dt ) {
+            bestHit = hit;
+            // bestHit.line = line;
           }
 
           if ( debugCtx ) {
