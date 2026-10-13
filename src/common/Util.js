@@ -98,3 +98,7 @@ export function drawText( ctx, text, x, y, fillStyle = 'white', scale = 0.02 ) {
   }
   ctx.restore();
 }
+
+export function randBetween( min, max ) {
+  return min + Math.random() * ( max - min );
+}
