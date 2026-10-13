@@ -34,10 +34,17 @@
             - Does some normal or dot product help me here?
           - Is this where we need to ignore this line because we're already hitting it?
           - Or is this where we need to move back so we aren't colliding?
+      - This specifically seems to be a problem with endpoints of lines
+        - Maybe we shouldn't include hit times of zero if its along the line endpoints?
       - Why is bestHit.pos in the middle of player sometimes?
 
     - We really need separate forms of collision detection for this
       - Moving around the endpoints is going to keep saying it's colliding and stop it
+      - The endpoints is the tricky part
+        - Instead of trying to move against the normal, recognize the special case and move around it angularly?
+        - Or this enough of a mess that we should just use bounding boxes and slide over the hard edge, with no normaling?
+          - That's certainly cleaner...
+
 
   
 10/8:
