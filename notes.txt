@@ -19,6 +19,10 @@
     - Break the stick by jumping
       - For game, ultimately still just straight up
       - For practice, could jump in direction of normal
+
+  = Going to try this with bounding boxes instead
+    - Avoid that corner case completely. 
+      - Either box is on line or it isn't.
   
 10/8:
   - Rope feels good, need to fix walking
