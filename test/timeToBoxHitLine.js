@@ -33,7 +33,7 @@ let player = {
 let debugInfo;
 
 
-const mousePos = [ 18, 21 ];
+const mousePos = [ 21, 20 ];
 
 let entities = [ player ];
 
@@ -74,20 +74,22 @@ gameCanvas.draw = ( ctx ) => {
   ctx.fillStyle = 'green';
   ctx.fillRect( player.pos[ 0 ] - player.radius, player.pos[ 1 ] - player.radius, player.radius * 2, player.radius * 2 );
 
-  const vel = vec2.subtract( [], mousePos, player.pos );
+  vec2.subtract( player.vel, mousePos, player.pos );
 
   ctx.strokeStyle = 'cyan';
   ctx.lineWidth = 0.1;
   Util.drawLine( ctx, player.pos, mousePos );
   ctx.strokeRect( mousePos[ 0 ] - player.radius, mousePos[ 1 ] - player.radius, player.radius * 2, player.radius * 2 );
 
-  const line = [ 18, 16, 18, 18 ];
+  // const line = [ 18, 16, 18, 18 ];
+  // Util.drawLine2( ctx, line, true );
 
-  Util.drawLine2( ctx, line, true );
+  const hit = Worms.getHit( map, player, 1, ( entity, line ) => timeToBoxHitLine( ...entity.pos, ...entity.vel, entity.radius, ...line ), ctx );
 
-  const hitTime = timeToBoxHitLine( ...player.pos, ...vel, player.radius, ...line );
+  ctx.strokeStyle = 'yellow';
+  Util.drawLine2( ctx, hit.line, true );
 
-  const hitPos = vec2.scaleAndAdd( [], player.pos, vel, hitTime );
+  const hitPos = vec2.scaleAndAdd( [], player.pos, player.vel, hit.time );
 
   ctx.fillStyle = ctx.strokeStyle = 'white';
   Util.drawPoint( ctx, hitPos, 0.2 );

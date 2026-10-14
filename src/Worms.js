@@ -45,7 +45,7 @@ function drawRope( ctx, from, to ) {
   // Util.drawLinePixel( ctx, from, to );
 }
 
-export function getHit( map, entity, dt, debugCtx ) {
+export function getHit( map, entity, dt, testFunc, debugCtx ) {
   // console.log( ' getHit' );
 
   let bestHit = {
@@ -98,7 +98,8 @@ export function getHit( map, entity, dt, debugCtx ) {
         ];
 
         lines.forEach( line => {
-          const hitTime = Collisions.timeToCircleHitLine( x, y, dx, dy, r, ...line );
+          // const hitTime = Collisions.timeToCircleHitLine( x, y, dx, dy, r, ...line );
+          const hitTime = testFunc( entity, line );
 
           // if ( hitTime < Infinity ) {
           //   console.log( '  hitTime for ', line, ' is ', hitTime );
