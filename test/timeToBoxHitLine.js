@@ -81,19 +81,18 @@ gameCanvas.draw = ( ctx ) => {
   Util.drawLine( ctx, player.pos, mousePos );
   ctx.strokeRect( mousePos[ 0 ] - player.radius, mousePos[ 1 ] - player.radius, player.radius * 2, player.radius * 2 );
 
-  // const line = [ 18, 16, 18, 18 ];
-  // Util.drawLine2( ctx, line, true );
-
   const hit = Worms.getHit( map, player, 1, ( entity, line ) => timeToBoxHitLine( ...entity.pos, ...entity.vel, entity.radius, ...line ), ctx );
 
-  ctx.strokeStyle = 'yellow';
-  Util.drawLine2( ctx, hit.line, true );
-
-  const hitPos = vec2.scaleAndAdd( [], player.pos, player.vel, hit.time );
-
-  ctx.fillStyle = ctx.strokeStyle = 'white';
-  Util.drawPoint( ctx, hitPos, 0.2 );
-  ctx.strokeRect( hitPos[ 0 ] - player.radius, hitPos[ 1 ] - player.radius, player.radius * 2, player.radius * 2 );
+  if ( hit.line ) {
+    ctx.strokeStyle = 'yellow';
+    Util.drawLine2( ctx, hit.line, true );
+    
+    const hitPos = vec2.scaleAndAdd( [], player.pos, player.vel, hit.time );
+    
+    ctx.fillStyle = ctx.strokeStyle = 'white';
+    Util.drawPoint( ctx, hitPos, 0.2 );
+    ctx.strokeRect( hitPos[ 0 ] - player.radius, hitPos[ 1 ] - player.radius, player.radius * 2, player.radius * 2 );
+  }
 }
 
 

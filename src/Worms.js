@@ -86,17 +86,13 @@ export function getHit( map, entity, dt, testFunc, debugCtx ) {
         }
 
         // Test walls
-        const [ x, y ] = entity.pos;
-        const [ dx, dy ] = entity.vel;
-        const r = entity.radius;
+        const lines = [];
 
-        const lines = [
-          [ testCol, testRow + 1, testCol, testRow ],         // left
-          [ testCol, testRow, testCol + 1, testRow ],         // top
-          [ testCol + 1, testRow, testCol + 1, testRow + 1 ], // right
-          [ testCol + 1, testRow + 1, testCol, testRow + 1 ], // bottom
-        ];
-
+        if ( entity.vel[ 0 ] > 0 )  lines.push( [ testCol, testRow + 1, testCol, testRow ] );         // left
+        if ( entity.vel[ 1 ] > 0 )  lines.push( [ testCol, testRow, testCol + 1, testRow ] );         // top
+        if ( entity.vel[ 0 ] < 0 )  lines.push( [ testCol + 1, testRow, testCol + 1, testRow + 1 ] ); // right
+        if ( entity.vel[ 1 ] < 0 )  lines.push( [ testCol + 1, testRow + 1, testCol, testRow + 1 ] ); // bottom
+        
         lines.forEach( line => {
           // const hitTime = Collisions.timeToCircleHitLine( x, y, dx, dy, r, ...line );
           const hitTime = testFunc( entity, line );
