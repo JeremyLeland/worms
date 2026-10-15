@@ -1,3 +1,86 @@
+function pointDistToLine( x, y, x1, y1, x2, y2 ) {
+  const px = x2 - x1;
+  const py = y2 - y1;
+  const D = ( px * px ) + ( py * py );
+
+  const len = Math.sqrt( D );
+  const normX = py / len;
+  const normY = -px / len;
+
+  return ( x - x1 ) * normX + ( y - y1 ) * normY;
+}
+
+function pointDistToLineSegment( x, y, x1, y1, x2, y2 ) {
+  const px = x2 - x1;
+  const py = y2 - y1;
+  const D = ( px * px ) + ( py * py );
+
+  if ( D === 0 ) {
+    return Math.hypot( x - x1, y - y1 );
+  }
+
+  const t = Math.max( 0, Math.min( 1, ( ( x - x1 ) * px + ( y - y1 ) * py ) / D ) );
+
+  const closestX = x1 + t * px;
+  const closestY = y1 + t * py;
+
+  return Math.hypot( x - closestX, y - closestY );
+}
+
+export function timeToBoxHitLine( x, y, dx, dy, radius, x1, y1, x2, y2 ) {
+  const xDir = Math.sign( dx );
+  const yDir = Math.sign( dy );
+
+  const Ax = x - xDir * radius;
+  const Ay = y - yDir * radius;
+  const Bx = x + xDir * radius;
+  const By = y + yDir * radius;
+
+  return Math.min(
+    // Check the 3 points around the two lines facing the direction we are moving
+    timeToPointHitLine( Ax, By, dx, dy, x1, y1, x2, y2 ),
+    timeToPointHitLine( Bx, Ay, dx, dy, x1, y1, x2, y2 ),
+    timeToPointHitLine( Bx, By, dx, dy, x1, y1, x2, y2 ),
+
+    // and the reverse (in case target line is smaller than us)
+    timeToPointHitLine( x1, y1, -dx, -dy, Ax, By, Bx, By ),
+    timeToPointHitLine( x1, y1, -dx, -dy, Bx, By, Bx, Ay ),
+    timeToPointHitLine( x2, y2, -dx, -dy, Ax, By, Bx, By ),
+    timeToPointHitLine( x2, y2, -dx, -dy, Bx, By, Bx, Ay ),
+  );
+}
+
+function timeToPointHitLine( x, y, dx, dy, x1, y1, x2, y2 ) {
+  const time = getLineIntersection( x, y, x + dx, y + dy, x1, y1, x2, y2 );
+
+  return -EPSILON <= time ? time : Infinity;
+}
+
+function getLineIntersection( x1, y1, x2, y2, x3, y3, x4, y4 ) {
+  const D = ( y4 - y3 ) * ( x2 - x1 ) - ( x4 - x3 ) * ( y2 - y1 );
+
+  if ( D != 0 ) {
+    const uA = ( ( x4 - x3 ) * ( y1 - y3 ) - ( y4 - y3 ) * ( x1 - x3 ) ) / D;
+    const uB = ( ( x2 - x1 ) * ( y1 - y3 ) - ( y2 - y1 ) * ( x1 - x3 ) ) / D;
+
+    // Bounds check uB here so we can just return uA
+    if ( 0 <= uB && uB <= 1 ) {
+      return uA;
+    }
+    // return {
+    //   uA: uA,
+    //   uB: uB,
+    //   // position: {
+    //   //   x: x1 + ( x2 - x1 ) * uA,
+    //   //   y: y1 + ( y2 - y1 ) * uA,
+    //   // }
+    // }
+  }
+
+  return Infinity;
+}
+
+
 // NOTE: The epsilons are important, really! 
 // You're always tempted to just use zero, but the use of EPISILON is the result of a lot of blood, sweat, and debugging
 const EPSILON = 1e-6;

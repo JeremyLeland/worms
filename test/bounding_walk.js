@@ -60,13 +60,15 @@ let entities = [ player ];
 
 
 MaskMap.setTerrainRect( map, 5, 8, 20, 5, Terrain.Empty );
-MaskMap.setTerrainRect( map, 2, 10, 25, 6, Terrain.Empty );
+MaskMap.setTerrainRect( map, 2, 10, 25, 5, Terrain.Empty );
 MaskMap.setTerrainRect( map, 5, 7, 4, 6, Terrain.Empty );
 // MaskMap.setTerrainRect( map, 20, 4, 8, 15, Terrain.Empty );
 MaskMap.setTerrainRect( map, 15, 4, 8, 15, Terrain.Empty );
 
-// MaskMap.setTerrainRect( map, 10, 16, 10, 1, Terrain.Empty );
-// MaskMap.setTerrainRect( map, 15, 17, 5, 1, Terrain.Empty );
+MaskMap.setTerrainRect( map, 10, 15, 10, 2, Terrain.Empty );
+MaskMap.setTerrainRect( map, 15, 17, 5, 1, Terrain.Empty );
+
+// MaskMap.setTerrainCircle( map, 40, 40, 30, Terrain.Empty );
 
 
 const backgroundImage = new OffscreenCanvas( map.cols, map.rows );
@@ -108,67 +110,7 @@ gameCanvas.update = ( dt ) => {
     //
     // See if we should be attached to a wall/floor first?
     //
-    const x = player.pos[ 0 ];
-    const y = player.pos[ 1 ];
-    const r = player.radius;
-    const minX = x - r;
-    const maxX = x + r;
-    const minY = y - r;
-    const maxY = y + r;
-  
-    const best = {
-      dist: Infinity,
-    };
-  
-    const testLeft   = Math.floor( minX - 1 );
-    const testTop    = Math.floor( minY - 1 );
-    const testRight  = Math.floor( maxX + 1 );
-    const testBottom = Math.floor( maxY + 1 );
-  
-    for ( let testRow = testTop; testRow <= testBottom; testRow ++ ) {
-      for ( let testCol = testLeft; testCol <= testRight; testCol ++ ) {
-  
-        if ( map.data[ testCol + testRow * map.cols ] !== 0 ) {
-          if ( minY < testRow + 1 && testRow < maxY ) {
-            if ( testCol < x ) {
-              const xDist = minX - ( testCol + 1 );
-              
-              if ( Math.abs( xDist ) < Math.abs( best.dist ) ) {
-                best.dist = xDist;
-                best.normal = [ 1, 0 ];
-              }
-            }
-            else {
-              const xDist = testCol - maxX;
-              
-              if ( Math.abs( xDist ) < Math.abs( best.dist ) ) {
-                best.dist = xDist;
-                best.normal = [ -1, 0 ];
-              }
-            }
-          }
-  
-          if ( minX < testCol + 1 && testCol < maxX ) {
-            if ( testRow < y ) {
-              const yDist = minY - ( testRow + 1 );
-              
-              if ( Math.abs( yDist ) < Math.abs( best.dist ) ) {
-                best.dist = yDist;
-                best.normal = [ 0, 1 ];
-              }
-            }
-            else {
-              const yDist = testRow - maxY;
-  
-              if ( Math.abs( yDist ) < Math.abs( best.dist ) ) {
-                best.dist = yDist;
-                best.normal = [ 0, -1 ];
-              }
-            }
-          }
-        }
-      }
-    }
+    const best = Worms.getTouch( map, entity );
 
     const moveDir = entity.isMovingLeft ? -1 : entity.isMovingRight ? 1 : 0;
 
@@ -295,6 +237,8 @@ gameCanvas.draw = ( ctx ) => {
   ctx.strokeStyle = 'cyan';
   ctx.lineWidth = 0.1;
   Util.drawLine( ctx, player.pos, vec2.scaleAndAdd( [], player.pos, player.vel, 100 ) );
+
+  Worms.getTouch( map, player, ctx );
 }
 
 

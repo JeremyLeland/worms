@@ -15,6 +15,38 @@
     - Climbing up over a corner does not (won't move when not on wall, falls back down)
       - Could potentially mitigate by allowing movement in air
 
+  - See how it behaves with higher resolution grid (smaller lines, bigger player)
+    - Actually, I'm still having problems with the low res grid
+    - Sometimes it goes through walls, sometimes not
+      - Seems to be because floor is closer, it ignores wall?
+        - Should we track xDist and yDist (and normals) separately?
+          - Maybe this would also help us with our corner case, so we can detect when we're in corner?
+          - We would need to know which ones to apply, since we can get large yDist with a slight x overlap
+            
+        - Maybe we do this in two phases? 
+          - Back out the smallest first, then find the next smallest after that fix?
+        - Can we just ignore 0? (or use EPSILON somehow)
+          - Then we aren't told about the floor, and can't walk...maybe we do want both x and y separately
+            - we just need to know which ones to count
+
+  - Track xDist and yDist separately
+    - but ignore the ones that are totally bogus?
+      - how do we know?
+      - maybe only save the smaller value per grid?
+        - so if x overlap is smaller than y overlap for given grid, only save that?
+
+  Shower thoughts:
+    - Definitely track x and y overlap separately
+    - Maybe skip my additional check that was avoiding long extra overlaps?
+      - That might tell me if I should be rounding a corner from the outside
+    - Otherwise, there are finite states of navigation
+      - Walls, inside corner, outside corner
+      - Determine which one I'm in and act appropriately?
+        - Seems like it would be easier to not have to spell it all out like that, though...
+    - Also, I should be using a "snap distance" of some sort, not just taking the shortest of any overlap
+      - Keep shortest in both dimensions, but only use ones that are within snap dist
+
+
 10/14:
   - If moving only happens while we are on ground, then we apply gravity and undo our climbing
     - But if we depend on movement for climbing up, that still won't help us climbing down

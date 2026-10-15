@@ -45,6 +45,92 @@ function drawRope( ctx, from, to ) {
   // Util.drawLinePixel( ctx, from, to );
 }
 
+export function getTouch( map, entity, debugCtx ) {
+  const best = {
+    dist: Infinity,
+  };
+
+  const x = entity.pos[ 0 ];
+  const y = entity.pos[ 1 ];
+  const r = entity.radius;
+  const minX = x - r;
+  const maxX = x + r;
+  const minY = y - r;
+  const maxY = y + r;
+
+  const testLeft   = Math.floor( minX - 1 );
+  const testTop    = Math.floor( minY - 1 );
+  const testRight  = Math.floor( maxX + 1 );
+  const testBottom = Math.floor( maxY + 1 );
+
+  for ( let testRow = testTop; testRow <= testBottom; testRow ++ ) {
+    for ( let testCol = testLeft; testCol <= testRight; testCol ++ ) {
+
+      if ( map.data[ testCol + testRow * map.cols ] !== 0 ) {
+        if ( minY < testRow + 1 && testRow < maxY ) {
+          if ( testCol < x ) {
+            const xDist = minX - ( testCol + 1 );
+
+            if ( debugCtx ) {
+              debugCtx.strokeStyle = xDist < 0 ? 'red' : 'lime';
+              Util.drawLine( debugCtx, [ testCol + 1, testRow + 0.5 ], [ testCol + 1 + xDist, testRow + 0.5 ] );
+            }
+            
+            if ( 0 < Math.abs( xDist ) && Math.abs( xDist ) < Math.abs( best.dist ) ) {
+              best.dist = xDist;
+              best.normal = [ 1, 0 ];
+            }
+          }
+          else {
+            const xDist = testCol - maxX;
+
+            if ( debugCtx ) {
+              debugCtx.strokeStyle = xDist < 0 ? 'red' : 'lime';
+              Util.drawLine( debugCtx, [ testCol, testRow + 0.5 ], [ testCol - xDist, testRow + 0.5 ] );
+            }
+            
+            if ( 0 < Math.abs( xDist ) && Math.abs( xDist ) < Math.abs( best.dist ) ) {
+              best.dist = xDist;
+              best.normal = [ -1, 0 ];
+            }
+          }
+        }
+
+        if ( minX < testCol + 1 && testCol < maxX ) {
+          if ( testRow < y ) {
+            const yDist = minY - ( testRow + 1 );
+
+            if ( debugCtx ) {
+              debugCtx.strokeStyle = yDist < 0 ? 'red' : 'lime';
+              Util.drawLine( debugCtx, [ testCol + 0.5, testRow + 1 ], [ testCol + 0.5, testRow + 1 + yDist ] );
+            }
+            
+            if ( 0 < Math.abs( yDist ) && Math.abs( yDist ) < Math.abs( best.dist ) ) {
+              best.dist = yDist;
+              best.normal = [ 0, 1 ];
+            }
+          }
+          else {
+            const yDist = testRow - maxY;
+
+            if ( debugCtx ) {
+              debugCtx.strokeStyle = yDist < 0 ? 'red' : 'lime';
+              Util.drawLine( debugCtx, [ testCol + 0.5, testRow ], [ testCol + 0.5, testRow - yDist ] );
+            }
+
+            if ( 0 < Math.abs( yDist ) && Math.abs( yDist ) < Math.abs( best.dist ) ) {
+              best.dist = yDist;
+              best.normal = [ 0, -1 ];
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return best;
+}
+
 export function getHit( map, entity, dt, testFunc, debugCtx ) {
   // console.log( ' getHit' );
 
