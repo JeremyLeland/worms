@@ -1,3 +1,19 @@
+10/14:
+  - If moving only happens while we are on ground, then we apply gravity and undo our climbing
+    - But if we depend on movement for climbing up, that still won't help us climbing down
+    - Kind of feel like I need to check around me for that
+    - NOW: Working on a bestTouch function that tells me which line is closest to player
+      - Need a test harness to validate this before I try to use in walk test
+      - Eventual goal is to check around us for touching
+        - If we're touching do walk instead of fall
+        - Maybe do this first as part of the same step loop, so we can fall on first step then touch/walk on second?
+  - The bounding box distance code is more involved than I remembered...
+    - I think I have something that will give me distance from line
+      - but will it correctly detect that we should switch to sliding down edge?
+        - might need to check distance from endpoints after all
+        - if it's checking endpoints, won't top and right of corner have same distance?
+        - maybe if it starts to fall off edge the right wall can pull it in
+
 10/13:
   - Want to try "sticking" to floors/walls
     - Find closest point of wall
