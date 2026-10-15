@@ -77,62 +77,72 @@ gameCanvas.draw = ( ctx ) => {
 
   ctx.lineWidth = 0.1;
 
-  let bestXDist = Infinity;
-  let bestYDist = Infinity;
+  const x = player.pos[ 0 ];
+  const y = player.pos[ 1 ];
+  const minX = x - player.radius;
+  const maxX = x + player.radius;
+  const minY = y - player.radius;
+  const maxY = y + player.radius;
 
-  const testLeft   = Math.floor( player.pos[ 0 ] - player.radius - 1 );
-  const testTop    = Math.floor( player.pos[ 1 ] - player.radius - 1 );
-  const testRight  = Math.floor( player.pos[ 0 ] + player.radius + 1 );
-  const testBottom = Math.floor( player.pos[ 1 ] + player.radius + 1 );
+  const best = {
+    dist: Infinity,
+  };
+
+  const testLeft   = Math.floor( minX - 1 );
+  const testTop    = Math.floor( minY - 1 );
+  const testRight  = Math.floor( maxX + 1 );
+  const testBottom = Math.floor( maxY + 1 );
 
   for ( let testRow = testTop; testRow <= testBottom; testRow ++ ) {
     for ( let testCol = testLeft; testCol <= testRight; testCol ++ ) {
 
       if ( map.data[ testCol + testRow * map.cols ] !== 0 ) {
-        
-        if ( player.pos[ 1 ] - player.radius < testRow + 1 && testRow < player.pos[ 1 ] + player.radius ) {
-          if ( testCol < player.pos[ 0 ] ) {
-            const xDist = player.pos[ 0 ] - player.radius - ( testCol + 1 );
-            // console.log( 'left xDist', xDist );
+        if ( minY < testRow + 1 && testRow < maxY ) {
+          if ( testCol < x ) {
+            const xDist = minX - ( testCol + 1 );
+            
             ctx.strokeStyle = xDist < 0 ? 'red' : 'lime';
             Util.drawLine( ctx, [ testCol + 1, testRow + 0.5 ], [ testCol + 1 + xDist, testRow + 0.5 ] );
 
-            if ( Math.abs( xDist ) < Math.abs( bestXDist ) ) {
-              bestXDist = xDist;
+            if ( Math.abs( xDist ) < Math.abs( best.dist ) ) {
+              best.dist = xDist;
+              best.normal = [ 1, 0 ];
             }
           }
           else {
-            const xDist = player.pos[ 0 ] + player.radius - testCol;
-            // console.log( 'right xDist', xDist );
+            const xDist = testCol - maxX;
+            
             ctx.strokeStyle = xDist < 0 ? 'red' : 'lime';
             Util.drawLine( ctx, [ testCol, testRow + 0.5 ], [ testCol - xDist, testRow + 0.5 ] );
 
-            if ( Math.abs( xDist ) < Math.abs( bestXDist ) ) {
-              bestXDist = xDist;
+            if ( Math.abs( xDist ) < Math.abs( best.dist ) ) {
+              best.dist = xDist;
+              best.normal = [ -1, 0 ];
             }
           }
         }
 
-        if ( player.pos[ 0 ] - player.radius < testCol + 1 && testCol < player.pos[ 0 ] + player.radius ) {
-
-          if ( testRow < player.pos[ 1 ] ) {
-            const yDist = player.pos[ 1 ] - player.radius - ( testRow + 1 );
-            // console.log( 'left xDist', xDist );
+        if ( minX < testCol + 1 && testCol < maxX ) {
+          if ( testRow < y ) {
+            const yDist = minY - ( testRow + 1 );
+            
             ctx.strokeStyle = yDist < 0 ? 'red' : 'lime';
             Util.drawLine( ctx, [ testCol + 0.5, testRow + 1 ], [ testCol + 0.5, testRow + 1 + yDist ] );
             
-            if ( Math.abs( yDist ) < Math.abs( bestYDist ) ) {
-              bestYDist = yDist;
+            if ( Math.abs( yDist ) < Math.abs( best.dist ) ) {
+              best.dist = yDist;
+              best.normal = [ 0, 1 ];
             }
           }
           else {
-            const yDist = player.pos[ 1 ] + player.radius - testRow;
-            // console.log( 'right xDist', xDist );
+            const yDist = testRow - maxY;
+
             ctx.strokeStyle = yDist < 0 ? 'red' : 'lime';
             Util.drawLine( ctx, [ testCol + 0.5, testRow ], [ testCol + 0.5, testRow - yDist ] );
             
-            if ( Math.abs( yDist ) < Math.abs( bestYDist ) ) {
-              bestYDist = yDist;
+            if ( Math.abs( yDist ) < Math.abs( best.dist ) ) {
+              best.dist = yDist;
+              best.normal = [ 0, -1 ];
             }
           }
         }
@@ -141,14 +151,9 @@ gameCanvas.draw = ( ctx ) => {
     }
   }
 
-  console.log( bestXDist, ',', bestYDist );
-
-  ctx.fillStyle = '#fff4';
-  if ( bestXDist < Infinity && Math.abs( bestXDist ) < Math.abs( bestYDist ) ) {
-    ctx.fillRect( player.pos[ 0 ] - bestXDist - player.radius, player.pos[ 1 ] - player.radius, player.radius * 2, player.radius * 2 );
-  }
-  else if ( bestYDist < Infinity ) {
-    ctx.fillRect( player.pos[ 0 ] - player.radius, player.pos[ 1 ] - bestYDist - player.radius, player.radius * 2, player.radius * 2 );
+  if ( best.dist < Infinity ) { 
+    ctx.fillStyle = '#fff4';
+    ctx.fillRect( minX - best.dist * best.normal[ 0 ], minY - best.dist * best.normal[ 1 ], player.radius * 2, player.radius * 2 );
   }
 
 }

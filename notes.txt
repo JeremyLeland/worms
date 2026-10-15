@@ -1,3 +1,14 @@
+10/15:
+  - NOW: Moving with snapping
+    - This method doesn't know anything about corners
+      - Once we're off the side, we're unattached
+        - Gravity should bring us down and then we'll snap, so it may end up being ok
+        - But if we wanted to be able to climb ceilings up to walls, we'd need to snap to endpoints as well
+          - which would probably use the dist to line segment function instead of my current hacky thing
+
+  - Would I be better off doing the dist/touch stuff with the circle?
+    - Might be cleaner to cross the corner (if I'm using touch code instead of hit code)
+
 10/14:
   - If moving only happens while we are on ground, then we apply gravity and undo our climbing
     - But if we depend on movement for climbing up, that still won't help us climbing down
@@ -21,6 +32,7 @@
     - I don't need to save the closest line to know how to snap...
       - ...but I probably need to if I want to know which way to walk
       - Either save the line or a number representing direction
+    - Simplify x/yDist calculation by subtracting centers and removing radius + 0.5?
 
 10/13:
   - Want to try "sticking" to floors/walls
