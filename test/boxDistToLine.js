@@ -17,7 +17,7 @@ const map = MaskMap.create( 32, 24, Terrain.Dirt );
 let player = {
   type: 'player',
   id: 'player1',
-  pos: [ 16, 12 ],
+  pos: [ 17.4, 16.4 ],
   vel: [ 0, 0 ],
   radius: 2,
   isMovingUp: false,
@@ -42,7 +42,7 @@ MaskMap.setTerrainRect( map, 5, 8, 20, 5, Terrain.Empty );
 MaskMap.setTerrainRect( map, 2, 10, 25, 6, Terrain.Empty );
 MaskMap.setTerrainRect( map, 5, 7, 4, 6, Terrain.Empty );
 // MaskMap.setTerrainRect( map, 20, 4, 8, 15, Terrain.Empty );
-MaskMap.setTerrainRect( map, 15, 4, 8, 15, Terrain.Empty );
+MaskMap.setTerrainRect( map, 15, 4, 5, 15, Terrain.Empty );
 
 // MaskMap.setTerrainRect( map, 10, 16, 10, 1, Terrain.Empty );
 // MaskMap.setTerrainRect( map, 15, 17, 5, 1, Terrain.Empty );
@@ -74,30 +74,83 @@ gameCanvas.draw = ( ctx ) => {
   ctx.fillStyle = 'green';
   ctx.fillRect( player.pos[ 0 ] - player.radius, player.pos[ 1 ] - player.radius, player.radius * 2, player.radius * 2 );
 
-  const L1 = [ 13, 18 ], L2 = [ 20, 18 ];
-  const norm = [ L2[ 1 ] - L1[ 1 ], L1[ 0 ] - L2[ 0 ] ];
-  vec2.normalize( norm, norm );
 
-  ctx.strokeStyle = 'cyan';
   ctx.lineWidth = 0.1;
-  Util.drawLine( ctx, L1, L2 );
 
-  const dist = boxDistToLine( ...player.pos, player.radius, ...L1, ...L2 );
+  let bestXDist = Infinity;
+  let bestYDist = Infinity;
 
-  console.log( dist );
+  const testLeft   = Math.floor( player.pos[ 0 ] - player.radius - 1 );
+  const testTop    = Math.floor( player.pos[ 1 ] - player.radius - 1 );
+  const testRight  = Math.floor( player.pos[ 0 ] + player.radius + 1 );
+  const testBottom = Math.floor( player.pos[ 1 ] + player.radius + 1 );
 
-  // const hit = Worms.getHit( map, player, 1, ( entity, line ) => timeToBoxHitLine( ...entity.pos, ...entity.vel, entity.radius, ...line ), ctx );
+  for ( let testRow = testTop; testRow <= testBottom; testRow ++ ) {
+    for ( let testCol = testLeft; testCol <= testRight; testCol ++ ) {
 
-  // if ( hit.line ) {
-  //   ctx.strokeStyle = 'yellow';
-  //   Util.drawLine2( ctx, hit.line, true );
-    
-  //   const hitPos = vec2.scaleAndAdd( [], player.pos, player.vel, hit.time );
-    
-  //   ctx.fillStyle = ctx.strokeStyle = 'white';
-  //   Util.drawPoint( ctx, hitPos, 0.2 );
-  //   ctx.strokeRect( hitPos[ 0 ] - player.radius, hitPos[ 1 ] - player.radius, player.radius * 2, player.radius * 2 );
-  // }
+      if ( map.data[ testCol + testRow * map.cols ] !== 0 ) {
+        
+        if ( player.pos[ 1 ] - player.radius < testRow + 1 && testRow < player.pos[ 1 ] + player.radius ) {
+          if ( testCol < player.pos[ 0 ] ) {
+            const xDist = player.pos[ 0 ] - player.radius - ( testCol + 1 );
+            // console.log( 'left xDist', xDist );
+            ctx.strokeStyle = xDist < 0 ? 'red' : 'lime';
+            Util.drawLine( ctx, [ testCol + 1, testRow + 0.5 ], [ testCol + 1 + xDist, testRow + 0.5 ] );
+
+            if ( Math.abs( xDist ) < Math.abs( bestXDist ) ) {
+              bestXDist = xDist;
+            }
+          }
+          else {
+            const xDist = player.pos[ 0 ] + player.radius - testCol;
+            // console.log( 'right xDist', xDist );
+            ctx.strokeStyle = xDist < 0 ? 'red' : 'lime';
+            Util.drawLine( ctx, [ testCol, testRow + 0.5 ], [ testCol - xDist, testRow + 0.5 ] );
+
+            if ( Math.abs( xDist ) < Math.abs( bestXDist ) ) {
+              bestXDist = xDist;
+            }
+          }
+        }
+
+        if ( player.pos[ 0 ] - player.radius < testCol + 1 && testCol < player.pos[ 0 ] + player.radius ) {
+
+          if ( testRow < player.pos[ 1 ] ) {
+            const yDist = player.pos[ 1 ] - player.radius - ( testRow + 1 );
+            // console.log( 'left xDist', xDist );
+            ctx.strokeStyle = yDist < 0 ? 'red' : 'lime';
+            Util.drawLine( ctx, [ testCol + 0.5, testRow + 1 ], [ testCol + 0.5, testRow + 1 + yDist ] );
+            
+            if ( Math.abs( yDist ) < Math.abs( bestYDist ) ) {
+              bestYDist = yDist;
+            }
+          }
+          else {
+            const yDist = player.pos[ 1 ] + player.radius - testRow;
+            // console.log( 'right xDist', xDist );
+            ctx.strokeStyle = yDist < 0 ? 'red' : 'lime';
+            Util.drawLine( ctx, [ testCol + 0.5, testRow ], [ testCol + 0.5, testRow - yDist ] );
+            
+            if ( Math.abs( yDist ) < Math.abs( bestYDist ) ) {
+              bestYDist = yDist;
+            }
+          }
+        }
+      }
+      
+    }
+  }
+
+  console.log( bestXDist, ',', bestYDist );
+
+  ctx.fillStyle = '#fff4';
+  if ( bestXDist < Infinity && Math.abs( bestXDist ) < Math.abs( bestYDist ) ) {
+    ctx.fillRect( player.pos[ 0 ] - bestXDist - player.radius, player.pos[ 1 ] - player.radius, player.radius * 2, player.radius * 2 );
+  }
+  else if ( bestYDist < Infinity ) {
+    ctx.fillRect( player.pos[ 0 ] - player.radius, player.pos[ 1 ] - bestYDist - player.radius, player.radius * 2, player.radius * 2 );
+  }
+
 }
 
 
@@ -105,13 +158,20 @@ document.addEventListener( 'pointermove', e => {
   mousePos[ 0 ] = gameCanvas.getX( e.x );
   mousePos[ 1 ] = gameCanvas.getY( e.y );
 
-  gameCanvas.redraw();
+  if ( e.buttons === 2 ) {
+    vec2.copy( player.pos, mousePos );
+    
+    gameCanvas.redraw();
+  }
+
 } );
 
 document.addEventListener( 'pointerdown', e => {
+  mousePos[ 0 ] = gameCanvas.getX( e.x );
+  mousePos[ 1 ] = gameCanvas.getY( e.y );
+
   if ( e.buttons === 2 ) {
-    player.pos[ 0 ] = gameCanvas.getX( e.x );
-    player.pos[ 1 ] = gameCanvas.getY( e.y );
+    vec2.copy( player.pos, mousePos );
 
     gameCanvas.redraw();
   }

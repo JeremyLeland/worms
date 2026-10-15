@@ -13,6 +13,14 @@
         - might need to check distance from endpoints after all
         - if it's checking endpoints, won't top and right of corner have same distance?
         - maybe if it starts to fall off edge the right wall can pull it in
+  - Do I need to get this complicated?
+    - Can I just check my distance from the centers of grids?
+      - x dist from ones to side and y dist from ones above/below?
+
+  - Got some snapping going
+    - I don't need to save the closest line to know how to snap...
+      - ...but I probably need to if I want to know which way to walk
+      - Either save the line or a number representing direction
 
 10/13:
   - Want to try "sticking" to floors/walls
