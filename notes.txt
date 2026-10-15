@@ -9,6 +9,12 @@
   - Would I be better off doing the dist/touch stuff with the circle?
     - Might be cleaner to cross the corner (if I'm using touch code instead of hit code)
 
+  - Problems handing off corners
+    - Ceiling to wall keeps thinking we're on ceiling, won't let us go down
+    - Climbing down over corner works
+    - Climbing up over a corner does not (won't move when not on wall, falls back down)
+      - Could potentially mitigate by allowing movement in air
+
 10/14:
   - If moving only happens while we are on ground, then we apply gravity and undo our climbing
     - But if we depend on movement for climbing up, that still won't help us climbing down
