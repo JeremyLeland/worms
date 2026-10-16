@@ -46,6 +46,21 @@
     - Also, I should be using a "snap distance" of some sort, not just taking the shortest of any overlap
       - Keep shortest in both dimensions, but only use ones that are within snap dist
 
+  Thoughts on corner understanding
+    - For this particular game, we only want to go up and around corners with the lower left and lower right of our player box
+      - Future games might want to climb walls and go along ceilings, but let's not lose sight of goal here
+    - I really just need to understand the area around lower corners of my player
+      - for going left: NW, W, SW, and S
+        - if W and SW but not NW, go up
+      - for going right: E, SE, and S
+    - start by highlighting boxes around corners and determining which state they are in
+    - Maybe grab the whole side/bottom, not just the corner
+      - If any grid under us is solid, then the whole bottom is solid
+
+  Play with corners/edges
+    - Check the grid squares around the player and mark them as edge, corner, etc
+      - Do we care about whole side? It's just the bottom that determines if we can walk
+        - The hit testing should catch other walls...maybe..hopefully...
 
 10/14:
   - If moving only happens while we are on ground, then we apply gravity and undo our climbing

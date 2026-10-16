@@ -6,6 +6,15 @@ export function create( cols, rows, defaultValue = 0 ) {
   }
 }
 
+export function getTerrain( map, col, row ) {
+  col = Math.floor( col );
+  row = Math.floor( row );
+  
+  if ( 0 <= col && col < map.cols && 0 <= row && row < map.rows ) {
+    const mapIndex = col + row * map.cols;
+    return map.data[ mapIndex ];
+  }
+}
 
 export function setTerrain( map, col, row, value ) {
   col = Math.floor( col );
