@@ -1,3 +1,9 @@
+10/25:
+  - Note from vacation:
+    - when detected in the outside corner zone, snap us diagonally
+      - this way, we transfer the extra (e.g. upward) displacement into the new direction (e.g. right)
+      - this should also take us out of the corner zone
+
 10/15:
   - NOW: Moving with snapping
     - This method doesn't know anything about corners
