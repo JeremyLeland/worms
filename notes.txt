@@ -1,3 +1,30 @@
+10/26:
+  - Climbing corners
+    - Put left detect code
+    - Feels like we're doing too much snapping
+      - Is it because we're using round? I don't consider player to be cornering until it's actually above the the edge
+
+    - Seems like I want to use round() when there might be slight overlap (e.g. the ground) 
+      - ...but floor to make sure I climb the full corner? how do I reconcile this?
+      - Using pos + ( r - EPSILON ) seems to help with the "touching the floor" case
+        - we want minX and maxX to be our lower left and right corners inside the shape (tell us where we are)
+          - so we can add/subtract to find out what we're next to
+
+    - Options:
+      - test before move vs after move
+      - test 1 ahead vs current
+      - should also probably only include if in snap distance
+
+    - The tricky case right now is climbing down next to something that will make us climb up
+      - The next climb is being detected prematurely
+
+    - Got this sort of working for moving over right corners
+      - but the code is cumbersome (spelling out all cases, checking all overlaps)
+      - it's also fragile, since y ends up 17.0000001 and this throws off the boxes
+      - Math.round() had some advantages here, maybe bring that back in somehow?
+      - Also the pattern of checking the overlap and backtracking could maybe be part of a loop?
+
+
 10/25:
   - Note from vacation:
     - when detected in the outside corner zone, snap us diagonally

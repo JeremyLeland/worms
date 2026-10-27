@@ -17,7 +17,7 @@ const map = MaskMap.create( 32, 24, Terrain.Dirt );
 let player = {
   type: 'player',
   id: 'player1',
-  pos: [ 17.2, 16.9 ],
+  pos: [ 18, 17 ],
   vel: [ 0, 0 ],
   radius: 2,
   isMovingUp: false,
@@ -29,6 +29,8 @@ let player = {
   isShootingRope: false,
   health: 100,
 };
+
+const EPSILON = 1e-6;
 
 let debugInfo;
 
@@ -44,8 +46,8 @@ MaskMap.setTerrainRect( map, 5, 7, 4, 6, Terrain.Empty );
 // MaskMap.setTerrainRect( map, 20, 4, 8, 15, Terrain.Empty );
 MaskMap.setTerrainRect( map, 15, 4, 5, 15, Terrain.Empty );
 
-MaskMap.setTerrainRect( map, 10, 16, 10, 2, Terrain.Empty );
-MaskMap.setTerrainRect( map, 15, 17, 5, 1, Terrain.Empty );
+MaskMap.setTerrainRect( map, 10, 16, 15, 2, Terrain.Empty );
+MaskMap.setTerrainRect( map, 15, 17, 10, 1, Terrain.Empty );
 
 
 const backgroundImage = new OffscreenCanvas( map.cols, map.rows );
@@ -71,59 +73,160 @@ gameCanvas.draw = ( ctx ) => {
   MaskMap.makeMaskTransparent( foregroundCtx, map, Terrain.Empty );
   ctx.drawImage( foregroundImage, 0, 0 );
 
-  ctx.fillStyle = 'green';
-  ctx.fillRect( player.pos[ 0 ] - player.radius, player.pos[ 1 ] - player.radius, player.radius * 2, player.radius * 2 );
-
 
   ctx.lineWidth = 0.1;
 
+  // const x = player.pos[ 0 ];
+  // const y = player.pos[ 1 ];
+  // const r = player.radius - EPSILON;
+  
+  // const minX = Math.floor( x - r );
+  // const maxX = Math.floor( x + r );
+  // const minY = Math.floor( y - r );
+  // const maxY = Math.floor( y + r );
 
-  const x = player.pos[ 0 ];
-  const y = player.pos[ 1 ];
-  const r = player.radius;
-  const minX = x - r;
-  const maxX = x + r;
-  const minY = y - r;
-  const maxY = y + r;
+  // const test = {
+  //   W2: { pos: [ minX - 1, maxY - 1 ] },
+  //   W1: { pos: [ minX - 1, maxY     ] },
+  //   SW: { pos: [ minX - 1, maxY + 1 ] },
+  //   S1: { pos: [ minX    , maxY + 1 ] },
 
-  const testLeft   = Math.round( minX );
-  const testRight  = Math.round( maxX );
-  const testTop    = Math.round( minY );
-  const testBottom = Math.round( maxY );
+  //   E2: { pos: [ maxX + 1, maxY - 1 ] },
+  //   E1: { pos: [ maxX + 1, maxY     ] },
+  //   SE: { pos: [ maxX + 1, maxY + 1 ] },
+  //   S2: { pos: [ maxX    , maxY + 1 ] },
+  // }
 
-  const leftW1  = [ testLeft - 1, testBottom - 2 ];
-  const leftW2  = [ testLeft - 1, testBottom - 1 ];
-  // const leftSW = [ testLeft - 1, testBottom     ];
-  const leftS  = [ testLeft    , testBottom     ];
+  const PlayerMove = 0.4;
 
-  // const rightE1  = [ testRight    , testBottom - 2 ];
-  // const rightE2  = [ testRight    , testBottom - 1 ];
-  const rightSE = [ testRight    , testBottom     ];
-  const rightS  = [ testRight - 1, testBottom     ];
+  if ( player.isMovingLeft ) {
+    player.pos[ 0 ] -= PlayerMove;
 
-  ctx.fillStyle = 'cyan';
-  Util.drawPoint( ctx, leftS, 0.1 );
-  Util.drawPoint( ctx, rightSE, 0.1 );
+    const x = player.pos[ 0 ];
+    const y = player.pos[ 1 ];
+    const r = player.radius - EPSILON;
 
-  [ leftW1, leftW2, /*leftSW,*/ leftS, /*rightE1, rightE2,*/ rightSE, rightS ].forEach( pos => {
-    ctx.strokeStyle = MaskMap.getTerrain( map, ...pos ) ? 'white' : 'gray';
-    ctx.strokeRect( ...pos, 1, 1 );
-  } );
+    let overlap = 0;
 
-  // Left climb
-  if ( MaskMap.getTerrain( map, ...leftS ) !== Terrain.Empty ) {
-    if ( MaskMap.getTerrain( map, ...leftW1 ) === Terrain.Empty &&
-         MaskMap.getTerrain( map, ...leftW2 ) !== Terrain.Empty ) {
-      console.log( 'Can climb left' );
+    // Check left wall
+    // TODO: rest of the left
+    if ( getTerrain( x - r, y + r, ctx ) ) {
+      overlap = Math.ceil( x - r ) - ( x - r );
+
+      console.log( 'left', overlap );
+
+      player.pos[ 0 ] += overlap;
     }
-    else { 
-      console.log( 'Can walk left' );
+
+    // Climb up left
+    if ( getTerrain( x - r, y + r, ctx ) && !getTerrain( x - r, y + r - 1, ctx ) ) {
+      console.log( 'climbing up left by ', overlap );
+
+      player.pos[ 1 ] -= overlap;
+
+      const vertOverlap = Math.floor( y + r ) - ( player.pos[ 1 ] + r );
+
+      console.log( 'outside corner left', vertOverlap );
+
+      if ( vertOverlap > 0 ) {
+        player.pos[ 1 ] += vertOverlap;
+        player.pos[ 0 ] -= vertOverlap;
+      }
+    }
+
+    // // Climb down right
+    // if ( /*!test.E1.val &&*/ !test.S2.val && test.SE.val ) {
+    //   player.pos[ 0 ] += PlayerMove;
+    //   player.pos[ 1 ] += PlayerMove;
+    // }
+  }
+
+  if ( player.isMovingRight ) {
+    player.pos[ 0 ] += PlayerMove;
+
+    const x = player.pos[ 0 ];
+    const y = player.pos[ 1 ];
+    const r = player.radius - EPSILON;
+
+    // Check right wall
+    // TODO: rest of the right
+    if ( getTerrain( x + r, y + r, ctx ) ) {
+      const overlap = ( x + r ) - Math.floor( x + r );
+
+      console.log( 'right', overlap );
+
+      player.pos[ 0 ] -= overlap;
+    
+      // Climb up right
+      if ( getTerrain( x + r, y + r, ctx ) && !getTerrain( x + r, y + r - 1, ctx ) ) {
+        console.log( 'climbing up right by', overlap );
+
+        player.pos[ 1 ] -= overlap;
+
+        const vertOvershoot = Math.floor( y + r ) - ( player.pos[ 1 ] + r );
+
+        console.log( 'outside corner right', vertOvershoot );
+
+        if ( vertOvershoot > 0 ) {
+          player.pos[ 1 ] += vertOvershoot;
+          player.pos[ 0 ] += vertOvershoot;
+        }
+      }
+    }
+
+    // Climb down left
+    else if ( getTerrain( x - r - 1, y + r + 1, ctx ) && !getTerrain( x - r, y + r + 1, ctx ) ) {
+      const overshoot = ( x - r ) - Math.floor( x - r );
+
+      console.log( 'right overshoot', overshoot );
+
+      player.pos[ 0 ] -= overshoot;
+      player.pos[ 1 ] += overshoot;
+    }
+    else if ( getTerrain( x - r - 1, y + r, ctx ) && !getTerrain( x - r, y + r, ctx ) ) {
+      const overshoot = ( x - r ) - Math.floor( x - r );
+
+      console.log( 'right overshoot', overshoot );
+
+      player.pos[ 0 ] -= overshoot;
+      player.pos[ 1 ] += overshoot;
+
+      const vertOverlap = ( player.pos[ 1 ] + r ) - Math.ceil( y + r );
+
+      console.log( 'right vert overlap', vertOverlap );
+
+      if ( vertOverlap > 0 ) {
+        player.pos[ 1 ] -= vertOverlap;
+        player.pos[ 0 ] += vertOverlap;
+      }
     }
   }
+
+  console.log( player.pos );
+
+  ctx.fillStyle = 'green';
+  ctx.fillRect( player.pos[ 0 ] - player.radius, player.pos[ 1 ] - player.radius, player.radius * 2, player.radius * 2 );
 }
 
+function getTerrain( x, y, debugCtx ) {
+  const val = MaskMap.getTerrain( map, x, y ) > 0;
 
-document.addEventListener( 'pointermove', e => {
+  if ( debugCtx ) {
+    debugCtx.strokeStyle = val ? 'white' : 'gray';
+    debugCtx.strokeRect( Math.floor( x ), Math.floor( y ), 1, 1 );
+  }
+
+  return val;
+}
+
+document.addEventListener( 'keydown', e => {
+  player.isMovingLeft = e.key == 'a';
+  player.isMovingRight = e.key == 'd';
+
+  gameCanvas.redraw();
+} );
+
+function pointerInput( e ) {
   mousePos[ 0 ] = gameCanvas.getX( e.x );
   mousePos[ 1 ] = gameCanvas.getY( e.y );
 
@@ -132,16 +235,7 @@ document.addEventListener( 'pointermove', e => {
     
     gameCanvas.redraw();
   }
+}
 
-} );
-
-document.addEventListener( 'pointerdown', e => {
-  mousePos[ 0 ] = gameCanvas.getX( e.x );
-  mousePos[ 1 ] = gameCanvas.getY( e.y );
-
-  if ( e.buttons === 2 ) {
-    vec2.copy( player.pos, mousePos );
-
-    gameCanvas.redraw();
-  }
-} );
+document.addEventListener( 'pointermove', pointerInput );
+document.addEventListener( 'pointerdown', pointerInput );
