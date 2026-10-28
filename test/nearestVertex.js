@@ -238,15 +238,25 @@ gameCanvas.draw = ( ctx ) => {
 
     // Starting over the edge of an inner corner behind us
     else if ( typeSE === 0b0001 ) {
-      player.pos[ 0 ] += Math.max( 0, toRight );
-      player.pos[ 1 ] += Math.max( 0, toBottom );
-      
-      const moveLeft = Math.max( 0, Math.min( toLeft, PlayerMove ) );
-      player.pos[ 0 ] -= moveLeft;
+      if ( toLeft > 0 && toRight < toBottom ) {
+        player.pos[ 1 ] += toBottom;
 
-      // only climb down if it's exactly 1 down
-      if ( typeSSE === 0b0111 ) {  
-        player.pos[ 1 ] += PlayerMove - moveLeft;
+        const moveLeft = Math.min( toLeft, PlayerMove );
+        player.pos[ 0 ] -= moveLeft;
+
+        // only climb down if it's exactly 1 down
+        if ( typeSSE === 0b0111 ) {  
+          player.pos[ 1 ] += PlayerMove - moveLeft;
+        }
+      }
+      else {
+        player.pos[ 0 ] += toRight;
+        player.pos[ 1 ] += Math.max( 0, toBottom );
+
+        // only climb down if it's exactly 1 down
+        if ( typeSSE === 0b0111 ) {  
+          player.pos[ 1 ] += PlayerMove;
+        }
       }
     }
 
@@ -323,16 +333,26 @@ gameCanvas.draw = ( ctx ) => {
 
     // Starting over the edge of an inner corner behind us
     else if ( typeSW === 0b0010 ) {
-      player.pos[ 0 ] -= Math.max( 0, toLeft );
-      player.pos[ 1 ] += Math.max( 0, toBottom );
-      
-      const moveRight = Math.max( 0, Math.min( toRight, PlayerMove ) );
-      player.pos[ 0 ] += moveRight;
+      if ( toRight > 0 && toLeft < toBottom ) {
+        player.pos[ 1 ] += toBottom;
 
-      // only climb down if it's exactly 1 down
-      if ( typeSSW === 0b1011 ) {
-        player.pos[ 1 ] += PlayerMove - moveRight;
-      }      
+        const moveRight = Math.min( toRight, PlayerMove );
+        player.pos[ 0 ] += moveRight;
+
+        // only climb down if it's exactly 1 down
+        if ( typeSSW === 0b1011 ) {
+          player.pos[ 1 ] += PlayerMove - moveRight;
+        }
+      }
+      else {
+        player.pos[ 0 ] -= toLeft;
+        player.pos[ 1 ] += Math.max( 0, toBottom );
+        
+        // only climb down if it's exactly 1 down
+        if ( typeSSW === 0b1011 ) {
+          player.pos[ 1 ] += PlayerMove;
+        }
+      }     
     }
 
     // Flat floor
