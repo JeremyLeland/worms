@@ -1,3 +1,26 @@
+10/28:
+  - The "vertex based" checks worked well
+    - I have something that seems to work in simple case with large blocks
+    - Next steps:
+      - Try larger player with smaller blocks
+        - Snap to floor when walking
+          - Figure out toLeft, toRight, toTop, toBottom ahead of time, and only snap if these are in range
+      - Check for collision against ceiling when climbing up
+        - Really, check for any collision against other blocks while walking
+          - Is it easier to handle this separtely entirely from the physics checks?
+      - Make real-time
+      - Incorporate with physics movement somehow
+        - Physics until we hit something, then try walking movement for the rest of dt?
+        - How does this mix with us moving in the air?
+          - Maybe we can always move left/right, unless one of the other cases is detected?
+            - When do we apply gravity?
+            - Should we try walking first, and then apply gravity/physics if not walking?
+        - How do we walk off tall wall (and have gravity take over)?
+          - Maybe walking and physics should be part of each step of the updater?
+          - Walk as much as we can, figure out how much dt that was
+          - If dt left over, do some physics until we hit a wall
+          - Check again if we are in position to walk, do any of that, etc until dt used up
+
 10/27:
   - Snap edges test
     - Drag player box around
@@ -13,6 +36,12 @@
 
   - radius - EPSILON is still needed, I think
     - use Math.floor() and radius - EPSILON to deal with maxY being too low when on ground
+
+  - What if we kept track of distance to blocks?
+    - Center of block?
+    - Vertices?
+      - Find which vertice is closest to advancing edge and control based on that?
+      - This works well!
 
 10/26:
   - Climbing corners
