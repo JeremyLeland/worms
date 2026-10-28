@@ -180,7 +180,7 @@ gameCanvas.draw = ( ctx ) => {
     
     // Climbing down inner corner behind us
     else if ( typeSE === 0b0111 ) {
-      if ( toRight < toBottom ) {
+      if ( toBottom > 0 && toRight < toBottom ) {
         player.pos[ 0 ] += toRight;
 
         const moveDown = Math.min( toBottom, PlayerMove );
@@ -188,7 +188,9 @@ gameCanvas.draw = ( ctx ) => {
         player.pos[ 0 ] -= PlayerMove - moveDown;
       }
       else {
+        player.pos[ 0 ] -= Math.max( 0, toLeft );
         player.pos[ 1 ] += toBottom;
+
         player.pos[ 0 ] -= PlayerMove;
       }
     }
@@ -236,7 +238,7 @@ gameCanvas.draw = ( ctx ) => {
       }
     }
 
-    // Starting over the edge of an inner corner behind us
+    // Starting over the edge of an outer corner behind us
     else if ( typeSE === 0b0001 ) {
       if ( toLeft > 0 && toRight < toBottom ) {
         player.pos[ 1 ] += toBottom;
@@ -276,7 +278,7 @@ gameCanvas.draw = ( ctx ) => {
 
     // Climbing down inner corner behind us
     else if ( typeSW === 0b1011 ) {
-      if ( toLeft < toBottom ) {
+      if ( toBottom > 0 && toLeft < toBottom ) {
         player.pos[ 0 ] -= toLeft;
 
         const moveDown = Math.min( toBottom, PlayerMove );
@@ -284,7 +286,9 @@ gameCanvas.draw = ( ctx ) => {
         player.pos[ 0 ] += PlayerMove - moveDown;
       }
       else {
+        player.pos[ 0 ] += Math.max( 0, toRight );
         player.pos[ 1 ] += toBottom;
+
         player.pos[ 0 ] += PlayerMove;
       }
     }
@@ -331,7 +335,7 @@ gameCanvas.draw = ( ctx ) => {
       }
     }
 
-    // Starting over the edge of an inner corner behind us
+    // Starting over the edge of an outer corner behind us
     else if ( typeSW === 0b0010 ) {
       if ( toRight > 0 && toLeft < toBottom ) {
         player.pos[ 1 ] += toBottom;

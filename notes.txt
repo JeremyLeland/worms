@@ -22,7 +22,8 @@
           - Check again if we are in position to walk, do any of that, etc until dt used up
 
   - The snap fixing is tedious as fuck
-    - Still need to fix cases where we are overlapping the outer corner we are climbing down (left and right)
+    - DONE: Still need to fix cases where we are overlapping the outer corner we are climbing down (left and right)
+    - DONE: Now need to fix climbing down inner corner when overlapping, it never ends...
     - Can I get rid of duplicated "only climb if it's exactly 1" tests...
       - ...by setting const move outside of if/else and including max(0, )?
 
