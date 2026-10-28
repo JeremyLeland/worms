@@ -89,17 +89,23 @@ gameCanvas.draw = ( ctx ) => {
   const maxX = player.pos[ 0 ] + player.radius;
   const maxY = player.pos[ 1 ] + player.radius;
 
-  const  W = [ Math.round( minX ), Math.round( maxY - 1 ) ];
-  const SW = [ Math.round( minX ), Math.round( maxY ) ];
-  const SE = [ Math.round( maxX ), Math.round( maxY ) ];
-  const  E = [ Math.round( maxX ), Math.round( maxY - 1 ) ];
+  const W   = [ Math.round( minX ), Math.round( maxY - 1 ) ];
+  const SW  = [ Math.round( minX ), Math.round( maxY     ) ];
+  const SSW = [ Math.round( minX ), Math.round( maxY + 1 ) ];
 
-  const typeSW = getType( ...SW );
-  const typeSE = getType( ...SE );
+  const E   = [ Math.round( maxX ), Math.round( maxY - 1 ) ];
+  const SE  = [ Math.round( maxX ), Math.round( maxY     ) ];
+  const SSE = [ Math.round( maxX ), Math.round( maxY + 1 ) ];
 
-  console.log( typeSW.toString( 2 ).padStart( 4, 0 ), typeSE.toString( 2 ).padStart( 4, 0 ) );
+  const typeW   = getType( ...W );
+  const typeSW  = getType( ...SW );
+  const typeSSW = getType( ...SSW );
 
-  const PlayerMove = 0.4;
+  const typeE   = getType( ...E );
+  const typeSE  = getType( ...SE );
+  const typeSSE = getType( ...SSE );
+
+  const PlayerMove = 0.4; // * dt
 
   if ( player.isMovingLeft ) {
 
@@ -116,20 +122,19 @@ gameCanvas.draw = ( ctx ) => {
       player.pos[ 0 ] -= PlayerMove - toBottom;
     }
 
-    // Inner corner
+    // Climbing up inner corner
     else if ( typeSW === 0b1011 ) {
       const toLeft = player.pos[ 0 ] - player.radius - SW[ 0 ];
-
+        
       player.pos[ 0 ] -= toLeft;
-      player.pos[ 1 ] -= PlayerMove - toLeft;
+
+      // only climb up if it's exactly 1 up
+      if ( typeW === 0b0010 ) {
+        player.pos[ 1 ] -= PlayerMove - toLeft;
+      }
     }
 
-    // Flat floor
-    else if ( typeSW === 0b0011 || typeSE === 0b0011 ) {
-      player.pos[ 0 ] -= PlayerMove;
-    }
-
-    // Outer corner
+    // Climbing up over outer corner
     else if ( typeSW === 0b0010 ) {
       const toTop = player.pos[ 1 ] + player.radius - SW[ 1 ];
 
@@ -142,7 +147,16 @@ gameCanvas.draw = ( ctx ) => {
       const toLeft = player.pos[ 0 ] + player.radius - SE[ 0 ];
 
       player.pos[ 0 ] -= toLeft;
-      player.pos[ 1 ] += PlayerMove - toLeft;
+
+      // only climb down if it's exactly 1 down
+      if ( typeSSE === 0b0111 ) {  
+        player.pos[ 1 ] += PlayerMove - toLeft;
+      }
+    }
+
+    // Flat floor
+    else if ( typeSW === 0b0011 || typeSE === 0b0011 ) {
+      player.pos[ 0 ] -= PlayerMove;
     }
   }
   else if ( player.isMovingRight ) {
@@ -160,15 +174,19 @@ gameCanvas.draw = ( ctx ) => {
       player.pos[ 0 ] += PlayerMove - toBottom;
     }
 
-    // Inner corner
+    // Climbing up inner corner
     else if ( typeSE === 0b0111 ) {
       const toRight = SE[ 0 ] - ( player.pos[ 0 ] + player.radius );
-
+      
       player.pos[ 0 ] += toRight;
-      player.pos[ 1 ] -= PlayerMove - toRight;
+
+      // only climb up if it's exactly 1 up
+      if ( typeE === 0b0001 ) {
+        player.pos[ 1 ] -= PlayerMove - toRight;
+      }
     }
 
-    // Outer corner
+    // Climbing up over outer corner
     else if ( typeSE === 0b0001 ) {
       const toTop = player.pos[ 1 ] + player.radius - SE[ 1 ];
 
@@ -179,9 +197,13 @@ gameCanvas.draw = ( ctx ) => {
     // Starting over the edge of an inner corner behind us
     else if ( typeSW === 0b0010 ) {
       const toRight = SW[ 0 ] - ( player.pos[ 0 ] - player.radius );
-
+        
       player.pos[ 0 ] += toRight;
-      player.pos[ 1 ] += PlayerMove - toRight;
+
+      // only climb down if it's exactly 1 down
+      if ( typeSSW === 0b1011 ) {
+        player.pos[ 1 ] += PlayerMove - toRight;
+      }
     }
 
     // Flat floor
