@@ -1,3 +1,19 @@
+10/27:
+  - Snap edges test
+    - Drag player box around
+    - Show which edges are within snap range
+    - Categorize as corner, climb, etc (or say what left/right would do in this scenario)
+
+  - What if instead of round/floor/ceil I started with inner edge then tested outer edge?
+    - So it'll tell me if I'm overlapping something, but otherwise will give me full dist to next wall?
+      - Would need even more if we ever snap more than 0.5
+      - If snap is less than 0.5, though, this should be enough as is...
+      - For simplicity, let's assume snap will always be less than 0.5 for now
+    - This ends up being kind of like how I was testing for closest line before...
+
+  - radius - EPSILON is still needed, I think
+    - use Math.floor() and radius - EPSILON to deal with maxY being too low when on ground
+
 10/26:
   - Climbing corners
     - Put left detect code
@@ -21,8 +37,18 @@
     - Got this sort of working for moving over right corners
       - but the code is cumbersome (spelling out all cases, checking all overlaps)
       - it's also fragile, since y ends up 17.0000001 and this throws off the boxes
+        - should we subtract true radius from the edge to set position?
       - Math.round() had some advantages here, maybe bring that back in somehow?
       - Also the pattern of checking the overlap and backtracking could maybe be part of a loop?
+
+  - Slightly different way to think of it
+    - Where am I snapping?
+      - If I'm snapping, then don't apply gravity
+      - Test distances from left, right, down
+        - And only count left/right if height of one
+      - Determine movement from which sides are snapping and which move key is pressed
+    - Make this a separate test that shows which direction we are snapping
+      - then add keyboard movement
 
 
 10/25:
