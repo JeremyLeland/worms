@@ -180,92 +180,80 @@ gameCanvas.draw = ( ctx ) => {
     
     // Climbing down inner corner behind us
     else if ( typeSE === 0b0111 ) {
+      const moveDown = Math.max( 0, Math.min( toBottom, PlayerMove ) );
+
       if ( toBottom > 0 && toRight < toBottom ) {
         player.pos[ 0 ] += toRight;
-
-        const moveDown = Math.min( toBottom, PlayerMove );
         player.pos[ 1 ] += moveDown;
-        player.pos[ 0 ] -= PlayerMove - moveDown;
       }
       else {
         player.pos[ 0 ] -= Math.max( 0, toLeft );
         player.pos[ 1 ] += toBottom;
-
-        player.pos[ 0 ] -= PlayerMove;
       }
+
+      player.pos[ 0 ] -= PlayerMove - moveDown;
     }
     
     // Climbing up inner corner
     else if ( typeSW === 0b1011 ) {
+      const moveLeft = Math.max( 0, Math.min( toLeft, PlayerMove ) );
+
       // "toBottom < toLeft" handles where we're actually close to top
       if ( toLeft > 0 && toBottom < toLeft ) {
         player.pos[ 1 ] += toBottom;
-
-        const moveLeft = Math.min( toLeft, PlayerMove );
         player.pos[ 0 ] -= moveLeft;
-        
-        // only climb up if it's exactly 1 up
-        if ( typeW === 0b0010 ) {
-          player.pos[ 1 ] -= PlayerMove - moveLeft;
-        }
       }
       else {
         player.pos[ 0 ] -= toLeft;
         player.pos[ 1 ] -= Math.max( 0, toTop );
+      }
 
-        // only climb up if it's exactly 1 up
-        if ( typeW === 0b0010 ) {
-          player.pos[ 1 ] -= PlayerMove;
-        }
+      // only climb up if it's exactly 1 up
+      if ( typeW === 0b0010 ) {
+        player.pos[ 1 ] -= PlayerMove - moveLeft;
       }
     }
 
     // Climbing up over outer corner
     else if ( typeSW === 0b0010 ) {
+      const moveUp = Math.max( 0, Math.min( toTop, PlayerMove ) );
+
       // "toBottom < toLeft" handles overlap
       if ( toTop > 0 && toBottom < toLeft ) {
         player.pos[ 0 ] -= toLeft;
-
-        const moveUp = Math.min( toTop, PlayerMove );
         player.pos[ 1 ] -= moveUp;
-        player.pos[ 0 ] -= PlayerMove - moveUp;
       }
       else {
         player.pos[ 0 ] -= Math.max( 0, toLeft );
         player.pos[ 1 ] += toBottom;
-
-        player.pos[ 0 ] -= PlayerMove;
       }
+
+      player.pos[ 0 ] -= PlayerMove - moveUp;
     }
 
     // Starting over the edge of an outer corner behind us
     else if ( typeSE === 0b0001 ) {
+      const moveLeft = Math.max( 0, Math.min( toLeft, PlayerMove ) );
+
       if ( toLeft > 0 && toRight < toBottom ) {
-        player.pos[ 1 ] += toBottom;
-
-        const moveLeft = Math.min( toLeft, PlayerMove );
         player.pos[ 0 ] -= moveLeft;
-
-        // only climb down if it's exactly 1 down
-        if ( typeSSE === 0b0111 ) {  
-          player.pos[ 1 ] += PlayerMove - moveLeft;
-        }
+        player.pos[ 1 ] += toBottom;
       }
       else {
         player.pos[ 0 ] += toRight;
         player.pos[ 1 ] += Math.max( 0, toBottom );
+      }
 
-        // only climb down if it's exactly 1 down
-        if ( typeSSE === 0b0111 ) {  
-          player.pos[ 1 ] += PlayerMove;
-        }
+      // only climb down if it's exactly 1 down
+      if ( typeSSE === 0b0111 ) {  
+        player.pos[ 1 ] += PlayerMove - moveLeft;
       }
     }
 
     // Flat floor ( TODO: Check for all parts of floor, not just corners?)
     else if ( typeSW === 0b0011 || typeSE === 0b0011 ) {
-      player.pos[ 1 ] += toBottom;
       player.pos[ 0 ] -= PlayerMove;
+      player.pos[ 1 ] += toBottom;
     }
   }
   else if ( player.isMovingRight ) {
@@ -278,91 +266,79 @@ gameCanvas.draw = ( ctx ) => {
 
     // Climbing down inner corner behind us
     else if ( typeSW === 0b1011 ) {
+      const moveDown = Math.max( 0, Math.min( toBottom, PlayerMove ) );
+
       if ( toBottom > 0 && toLeft < toBottom ) {
         player.pos[ 0 ] -= toLeft;
-
-        const moveDown = Math.min( toBottom, PlayerMove );
         player.pos[ 1 ] += moveDown;
-        player.pos[ 0 ] += PlayerMove - moveDown;
       }
       else {
         player.pos[ 0 ] += Math.max( 0, toRight );
         player.pos[ 1 ] += toBottom;
-
-        player.pos[ 0 ] += PlayerMove;
       }
+
+      player.pos[ 0 ] += PlayerMove - moveDown;
     }
 
     // Climbing up inner corner
     else if ( typeSE === 0b0111 ) {
+      const moveRight = Math.max( 0, Math.min( toRight, PlayerMove ) );
+
       if ( toRight > 0 && toBottom < toRight ) {
         player.pos[ 1 ] += toBottom;
-
-        const moveRight = Math.min( toRight, PlayerMove );
         player.pos[ 0 ] += moveRight;
-
-        // only climb up if it's exactly 1 up
-        if ( typeE === 0b0001 ) {
-          player.pos[ 1 ] -= PlayerMove - moveRight;
-        }
       }
       else {
         player.pos[ 0 ] += toRight;
         player.pos[ 1 ] -= Math.max( 0, toTop );
+      }
 
-        // only climb up if it's exactly 1 up
-        if ( typeE === 0b0001 ) {
-          player.pos[ 1 ] -= PlayerMove;
-        }
+      // only climb up if it's exactly 1 up
+      if ( typeE === 0b0001 ) {
+        player.pos[ 1 ] -= PlayerMove - moveRight;
       }
     }
 
     // Climbing up over outer corner
     else if ( typeSE === 0b0001 ) {
+      const moveUp = Math.max( 0, Math.min( toTop, PlayerMove ) );
+
       // "toBottom < toRight" handles overlap
       if ( toTop > 0 && toBottom < toRight ) {
         player.pos[ 0 ] += toRight;
-
-        const moveUp = Math.min( toTop, PlayerMove );
         player.pos[ 1 ] -= moveUp;
-        player.pos[ 0 ] += PlayerMove - moveUp;
       }
       else {
         player.pos[ 0 ] += Math.max( 0, toRight );
         player.pos[ 1 ] += toBottom;
-
-        player.pos[ 0 ] += PlayerMove;
       }
+
+      player.pos[ 0 ] += PlayerMove - moveUp;
     }
 
     // Starting over the edge of an outer corner behind us
     else if ( typeSW === 0b0010 ) {
+      const moveRight = Math.max( 0, Math.min( toRight, PlayerMove ) );
+
       if ( toRight > 0 && toLeft < toBottom ) {
-        player.pos[ 1 ] += toBottom;
-
-        const moveRight = Math.min( toRight, PlayerMove );
         player.pos[ 0 ] += moveRight;
-
-        // only climb down if it's exactly 1 down
-        if ( typeSSW === 0b1011 ) {
-          player.pos[ 1 ] += PlayerMove - moveRight;
-        }
+        player.pos[ 1 ] += toBottom;
       }
       else {
         player.pos[ 0 ] -= toLeft;
         player.pos[ 1 ] += Math.max( 0, toBottom );
-        
-        // only climb down if it's exactly 1 down
-        if ( typeSSW === 0b1011 ) {
-          player.pos[ 1 ] += PlayerMove;
-        }
-      }     
+      }
+
+      // only climb down if it's exactly 1 down
+      if ( typeSSW === 0b1011 ) {
+        player.pos[ 1 ] += PlayerMove - moveRight;
+      }
     }
 
     // Flat floor
     else if ( typeSW === 0b0011 || typeSE === 0b0011 ) {
-      player.pos[ 1 ] += toBottom;
       player.pos[ 0 ] += PlayerMove;
+      player.pos[ 1 ] += toBottom;
     }
   }
 
