@@ -1,3 +1,13 @@
+10/29:
+  - Got rid of duplicate "only 1 tall" climbing code, tightened things up a bit
+  - Consider checking entire edge of player for walking, collision, etc instead of just lower corner
+    - See how this comes up with larger player on smaller tiles
+  - Should the getType() stuff get moved to MaskMap?
+    - vertexType( x, y ) to handle the rounding and build the int type?
+    - Could also name the various types (inner corner, outer corner, wall, etc)
+  - This might make it cleaner to get the various vertices for an edge 
+    - (instead of trying to wrangle a bunch of points and values)
+
 10/28:
   - The "vertex based" checks worked well
     - I have something that seems to work in simple case with large blocks
