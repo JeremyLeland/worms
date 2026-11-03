@@ -157,13 +157,13 @@ gameCanvas.draw = ( ctx ) => {
   const toRight  = Math.round( maxX ) - maxX;
   const toBottom = Math.round( maxY ) - maxY;
 
-  const typeW   = MaskMap.getVertex( map, ...W );
-  const typeSW  = MaskMap.getVertex( map, ...SW );
-  const typeSSW = MaskMap.getVertex( map, ...SSW );
+  const typeW   = getVertex( map, ...W );
+  const typeSW  = getVertex( map, ...SW );
+  const typeSSW = getVertex( map, ...SSW );
   
-  const typeE   = MaskMap.getVertex( map, ...E );
-  const typeSE  = MaskMap.getVertex( map, ...SE );
-  const typeSSE = MaskMap.getVertex( map, ...SSE );  
+  const typeE   = getVertex( map, ...E );
+  const typeSE  = getVertex( map, ...SE );
+  const typeSSE = getVertex( map, ...SSE );  
   
 
   // TODO: Only snap if wall dist is less than SnapDist (currently snaps if < 0.5, based on rounding)
@@ -171,13 +171,13 @@ gameCanvas.draw = ( ctx ) => {
   if ( player.isMovingLeft ) {
 
     // Climbing down long wall behind us (shouldn't happen in game, but enabling for testing)
-    if ( typeSE === MaskMap.Vertex.East ) {
+    if ( typeSE === Vertex.East ) {
       player.pos[ 0 ] += toRight;
       player.pos[ 1 ] += PlayerMove;
     }
     
     // Climbing down inner corner behind us
-    else if ( typeSE === MaskMap.Vertex.InnerSE ) {
+    else if ( typeSE === Vertex.InnerSE ) {
       const moveDown = Math.max( 0, Math.min( toBottom, PlayerMove ) );
 
       if ( toBottom > 0 && toRight < toBottom ) {
@@ -193,7 +193,7 @@ gameCanvas.draw = ( ctx ) => {
     }
     
     // Climbing up inner corner
-    else if ( typeSW === MaskMap.Vertex.InnerSW ) {
+    else if ( typeSW === Vertex.InnerSW ) {
       const moveLeft = Math.max( 0, Math.min( toLeft, PlayerMove ) );
 
       // "toBottom < toLeft" handles where we're actually close to top
@@ -207,13 +207,13 @@ gameCanvas.draw = ( ctx ) => {
       }
 
       // only climb up if it's exactly 1 up
-      if ( typeW === MaskMap.Vertex.OuterSW ) {
+      if ( typeW === Vertex.OuterSW ) {
         player.pos[ 1 ] -= PlayerMove - moveLeft;
       }
     }
 
     // Climbing up over outer corner
-    else if ( typeSW === MaskMap.Vertex.OuterSW ) {
+    else if ( typeSW === Vertex.OuterSW ) {
       const moveUp = Math.max( 0, Math.min( toTop, PlayerMove ) );
 
       // "toBottom < toLeft" handles overlap
@@ -230,7 +230,7 @@ gameCanvas.draw = ( ctx ) => {
     }
 
     // Starting over the edge of an outer corner behind us
-    else if ( typeSE === MaskMap.Vertex.OuterSE ) {
+    else if ( typeSE === Vertex.OuterSE ) {
       const moveLeft = Math.max( 0, Math.min( toLeft, PlayerMove ) );
 
       if ( toLeft > 0 && toRight < toBottom ) {
@@ -243,15 +243,15 @@ gameCanvas.draw = ( ctx ) => {
       }
 
       // only climb down if it's exactly 1 down
-      if ( typeSSE === MaskMap.Vertex.InnerSE ) {  
+      if ( typeSSE === Vertex.InnerSE ) {  
         player.pos[ 1 ] += PlayerMove - moveLeft;
       }
     }
 
     // Flat floor ( TODO: Check for all parts of floor, not just corners?)
-    else { //if ( typeSW === MaskMap.Vertex.South || typeSE === MaskMap.Vertex.South ) {
+    else { //if ( typeSW === Vertex.South || typeSE === Vertex.South ) {
       for ( let x = minX; x <= maxX; x ++ ) {
-        if ( MaskMap.getVertex( map, x, maxY + 1 ) ) {
+        if ( getVertex( map, x, maxY + 1 ) ) {
           player.pos[ 0 ] -= PlayerMove;
           player.pos[ 1 ] += toBottom;
 
@@ -263,13 +263,13 @@ gameCanvas.draw = ( ctx ) => {
   else if ( player.isMovingRight ) {
 
     // Climbing down long wall behind us (shouldn't happen in game, but enabling for testing)
-    if ( typeSW === MaskMap.Vertex.West ) {
+    if ( typeSW === Vertex.West ) {
       player.pos[ 0 ] -= toLeft;
       player.pos[ 1 ] += PlayerMove;
     }
 
     // Climbing down inner corner behind us
-    else if ( typeSW === MaskMap.Vertex.InnerSW ) {
+    else if ( typeSW === Vertex.InnerSW ) {
       const moveDown = Math.max( 0, Math.min( toBottom, PlayerMove ) );
 
       if ( toBottom > 0 && toLeft < toBottom ) {
@@ -285,7 +285,7 @@ gameCanvas.draw = ( ctx ) => {
     }
 
     // Climbing up inner corner
-    else if ( typeSE === MaskMap.Vertex.InnerSE ) {
+    else if ( typeSE === Vertex.InnerSE ) {
       const moveRight = Math.max( 0, Math.min( toRight, PlayerMove ) );
 
       if ( toRight > 0 && toBottom < toRight ) {
@@ -298,13 +298,13 @@ gameCanvas.draw = ( ctx ) => {
       }
 
       // only climb up if it's exactly 1 up
-      if ( typeE === MaskMap.Vertex.OuterSE ) {
+      if ( typeE === Vertex.OuterSE ) {
         player.pos[ 1 ] -= PlayerMove - moveRight;
       }
     }
 
     // Climbing up over outer corner
-    else if ( typeSE === MaskMap.Vertex.OuterSE ) {
+    else if ( typeSE === Vertex.OuterSE ) {
       const moveUp = Math.max( 0, Math.min( toTop, PlayerMove ) );
 
       // "toBottom < toRight" handles overlap
@@ -321,7 +321,7 @@ gameCanvas.draw = ( ctx ) => {
     }
 
     // Starting over the edge of an outer corner behind us
-    else if ( typeSW === MaskMap.Vertex.OuterSW ) {
+    else if ( typeSW === Vertex.OuterSW ) {
       const moveRight = Math.max( 0, Math.min( toRight, PlayerMove ) );
 
       if ( toRight > 0 && toLeft < toBottom ) {
@@ -334,15 +334,15 @@ gameCanvas.draw = ( ctx ) => {
       }
 
       // only climb down if it's exactly 1 down
-      if ( typeSSW === MaskMap.Vertex.InnerSW ) {
+      if ( typeSSW === Vertex.InnerSW ) {
         player.pos[ 1 ] += PlayerMove - moveRight;
       }
     }
 
     // Flat floor
-    else {  //if ( typeSW === MaskMap.Vertex.South || typeSE === MaskMap.Vertex.South ) {
+    else {  //if ( typeSW === Vertex.South || typeSE === Vertex.South ) {
       for ( let x = minX; x <= maxX; x ++ ) {
-        if ( MaskMap.getVertex( map, x, maxY + 1 ) ) {
+        if ( getVertex( map, x, maxY + 1 ) ) {
           player.pos[ 0 ] += PlayerMove;
           player.pos[ 1 ] += toBottom;
 
@@ -366,6 +366,37 @@ gameCanvas.draw = ( ctx ) => {
   player.isMovingLeft = false;
   player.isMovingRight = false;
 }
+
+const Vertex = {
+  North: 0b1100,
+  South: 0b0011,
+  East:  0b0101,
+  West:  0b1010,
+
+  InnerSE: 0b0111,
+  InnerSW: 0b1011,
+  InnerNE: 0b1101,
+  InnerNW: 0b1110,
+
+  OuterNW: 0b1000,
+  OuterNE: 0b0100,
+  OuterSW: 0b0010,
+  OuterSE: 0b0001,
+
+  NW_SE: 0b1001,
+  NE_SW: 0b0110,
+};
+
+function getVertex( map, x, y ) {
+  const col = Math.round( x );
+  const row = Math.round( y );
+
+  return MaskMap.getTerrain( map, col - 1, row - 1 ) << 3 |
+         MaskMap.getTerrain( map, col    , row - 1 ) << 2 |
+         MaskMap.getTerrain( map, col - 1, row     ) << 1 |
+         MaskMap.getTerrain( map, col    , row     );
+}
+
 
 document.addEventListener( 'keydown', e => {
   player.isMovingLeft = e.key == 'a';

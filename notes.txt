@@ -1,3 +1,42 @@
+11/3:
+  - Try copying old vertex logic to new test, using edges and corner instead of vertex type
+
+11/2:
+  - Left can make us go up, go down, go left, or do nothing
+    - if there is any floor below us, we will not be going down
+      - we will do the going left part
+      - well, we could go down if we're close to right
+      - ugh...
+  - Should toLeft/toTop/etc as how far off we are from being aligned?
+    - Or how far to the next hit in that direction?
+
+  - Maybe the lesson is that I need a hybrid approach of edges and corners
+    - I think I still need the explicitly spelled out behavior of the first method
+    - I just need to expand it to consider the full edge instead of just the corner
+    - NEXT: Try copying the logic from nearestVertex1 and use combination of hasLeft/Top/etc and SW/SE to determine which state we're in
+
+10/31:
+  - I did all that vertex work, but I'm not sure it's exactly what I want
+  - There are places where I really only care about a few quadrants of the vertex
+  - The round()-ing is an important take away from that work
+    - I care about the map pieces around the rounded location
+    - I just don't always care about all of them
+    - For instance, alternating x_x_x_x will show as corners instead of South, but I want to walk across it
+    - Also, I should go up X
+                           _X_, even though that doesn't read as a corner
+
+    - Use round() when calculating min/max x/y
+    - Use getTerrainAt() with min/max x/y +1, -1, etc
+    - Check for ground first (can't move at all if no ground)
+      - Actually, if we want air movement, then maybe don't even worry about ground
+      - Snap to ground if it's there, at least
+    - Check left for sure
+      - Only move as far as entire left wall
+      - Allow move up if only 1 high and no walls above us
+    - If nothing to our left, check below and right
+      - If nothing below and corner/wall to right, start climbing down (but only if 1 height)
+
+
 10/29:
   - Got rid of duplicate "only 1 tall" climbing code, tightened things up a bit
   - Consider checking entire edge of player for walking, collision, etc instead of just lower corner
