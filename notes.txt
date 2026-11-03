@@ -1,6 +1,6 @@
 11/3:
   - DONE: Try copying old vertex logic to new test, using edges and corner instead of vertex type
-  - NEXT: Check for ceiling before going up
+  - DONE: Check for ceiling before going up
   - DONE: Need to clear entire rest of left side for walking up, not just bottom - 2
   - DONE: Climbing weirdly when should have an obstacle?
 
