@@ -1,5 +1,10 @@
 11/3:
-  - Try copying old vertex logic to new test, using edges and corner instead of vertex type
+  - DONE: Try copying old vertex logic to new test, using edges and corner instead of vertex type
+  - NEXT: Check for ceiling before going up
+  - DONE: Need to clear entire rest of left side for walking up, not just bottom - 2
+  - DONE: Climbing weirdly when should have an obstacle?
+
+  - Broadly, need to make sure extra obstacles properly block us
 
 11/2:
   - Left can make us go up, go down, go left, or do nothing

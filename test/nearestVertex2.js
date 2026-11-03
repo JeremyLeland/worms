@@ -79,7 +79,7 @@ const map = {
     1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,
     1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,
     1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,
-    1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,
+    1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,
     1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,
     1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,
     1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,
@@ -159,33 +159,10 @@ gameCanvas.draw = ( ctx ) => {
   const toRight  = right - maxX;
   const toBottom = bottom - maxY;
 
-  console.log( 'toLeft', toLeft );
-  console.log( 'toTop', toTop );
-  console.log( 'toRight', toRight );
-  console.log( 'toBottom', toBottom );
-
   let hasLeft = false;
   let hasTop = false;
   let hasRight = false;
   let hasBottom = false;
-
-  // TODO: Should right include below us? (top/bottom will do this, min/max y won't)
-
-  // for ( let y = minY; y < maxY && !hasLeft; y ++ ) {
-  //   hasLeft = !!MaskMap.getTerrain( map, left - 1, y, ctx );
-  // }
-
-  // for ( let x = minX; x < maxX && !hasTop; x ++ ) {
-  //   hasTop = !!MaskMap.getTerrain( map, x, top - 1, ctx );
-  // }
-
-  // for ( let y = minY; y < maxY && !hasRight; y ++ ) {
-  //   hasRight = !!MaskMap.getTerrain( map, right, y, ctx );
-  // }
-
-  // for ( let x = minX; x < maxX && !hasBottom; x ++ ) {
-  //   hasBottom = !!MaskMap.getTerrain( map, x, bottom, ctx );
-  // }
 
   ctx.strokeStyle = 'yellow';
 
@@ -205,30 +182,26 @@ gameCanvas.draw = ( ctx ) => {
     hasBottom = !!MaskMap.getTerrain( map, x, bottom, ctx );
   }
 
-  console.log( 'hasLeft', hasLeft );
-  console.log( 'hasTop', hasTop );
-  console.log( 'hasRight', hasRight );
-  console.log( 'hasBottom', hasBottom );
-
   ctx.strokeStyle = 'cyan';
 
   const SW = MaskMap.getTerrain( map, left - 1, bottom, ctx );
   const SE = MaskMap.getTerrain( map, right, bottom, ctx );
 
-  console.log( 'SW', SW );
-  console.log( 'SE', SE );
-  
 
   if ( player.isMovingLeft ) {
   
     // Climbing down long wall behind us (shouldn't happen in game, but enabling for testing)
     if ( hasRight && !hasBottom ) {
+      console.log( `Climbing down long wall behind us (shouldn't happen in game, but enabling for testing)` );
+
       player.pos[ 0 ] += toRight;
       player.pos[ 1 ] += PlayerMove;
     }
     
     // Climbing down inner corner behind us
     else if ( hasRight && hasBottom /* && SE */ ) {
+      console.log( `Climbing down inner corner behind us` );
+
       const moveDown = Math.max( 0, Math.min( toBottom, PlayerMove ) );
 
       if ( toBottom > 0 && toRight < toBottom ) {
@@ -244,7 +217,9 @@ gameCanvas.draw = ( ctx ) => {
     }
     
     // Climbing up inner corner in front of us
-    else if ( hasLeft && hasBottom /* && SW */ ) {
+    else if ( MaskMap.getTerrain( map, left - 1, bottom - 1, ctx ) && hasBottom /* && SW */ ) {
+      console.log( `Climbing up inner corner in front of us` );
+
       const moveLeft = Math.max( 0, Math.min( toLeft, PlayerMove ) );
 
       // "toBottom < toLeft" handles where we're actually close to top
@@ -258,13 +233,20 @@ gameCanvas.draw = ( ctx ) => {
       }
 
       // only climb up if it's exactly 1 up
-      if ( MaskMap.getTerrain( map, left - 1, bottom - 2, ctx ) === 0 ) {
+      let canClimbLeft = true;
+      for ( let y = top; y < bottom - 1 && canClimbLeft; y ++ ) {
+        canClimbLeft = !MaskMap.getTerrain( map, left - 1, y, ctx );
+      }
+
+      if ( canClimbLeft ) {
         player.pos[ 1 ] -= PlayerMove - moveLeft;
       }
     }
 
     // Climbing up over outer corner in front of us
     else if ( !hasLeft && !hasBottom && SW ) {
+      console.log( `Climbing up over outer corner in front of us` );
+
       const moveUp = Math.max( 0, Math.min( toTop, PlayerMove ) );
 
       // "toBottom < toLeft" handles overlap
@@ -282,6 +264,8 @@ gameCanvas.draw = ( ctx ) => {
 
     // Starting over the edge of an outer corner behind us
     else if ( !hasRight && !hasBottom && SE ) {
+      console.log( `Starting over the edge of an outer corner behind us` );
+
       const moveLeft = Math.max( 0, Math.min( toLeft, PlayerMove ) );
 
       if ( toLeft > 0 && toRight < toBottom ) {
@@ -300,12 +284,15 @@ gameCanvas.draw = ( ctx ) => {
     }
 
     else {
+      console.log( `Moving left` );
+
       // Flat floor
       if ( hasBottom ) {
         player.pos[ 1 ] += toBottom;
       }
 
-      player.pos[ 0 ] -= PlayerMove;
+      const moveLeft = hasLeft ? Math.max( 0, Math.min( toLeft, PlayerMove ) ) : PlayerMove;
+      player.pos[ 0 ] -= moveLeft;
     }
   }
   else if ( player.isMovingRight ) {
@@ -333,7 +320,7 @@ gameCanvas.draw = ( ctx ) => {
     }
 
     // Climbing up inner corner in front of us
-    else if ( hasRight && hasBottom /* && SE */ ) {
+    else if ( MaskMap.getTerrain( map, right, bottom - 1, ctx ) && hasBottom /* && SE */ ) {
       const moveRight = Math.max( 0, Math.min( toRight, PlayerMove ) );
 
       if ( toRight > 0 && toBottom < toRight ) {
@@ -346,7 +333,12 @@ gameCanvas.draw = ( ctx ) => {
       }
 
       // only climb up if it's exactly 1 up
-      if ( MaskMap.getTerrain( map, right, bottom - 2, ctx ) === 0 ) {
+      let canClimbRight = true;
+      for ( let y = top; y < bottom - 1 && canClimbRight; y ++ ) {
+        canClimbRight = !MaskMap.getTerrain( map, right, y, ctx );
+      }
+
+      if ( canClimbRight ) {
         player.pos[ 1 ] -= PlayerMove - moveRight;
       }
     }
@@ -393,7 +385,8 @@ gameCanvas.draw = ( ctx ) => {
         player.pos[ 1 ] += toBottom;
       }
       
-      player.pos[ 0 ] += PlayerMove;
+      const moveRight = hasRight ? Math.max( 0, Math.min( toRight, PlayerMove ) ) : PlayerMove;
+      player.pos[ 0 ] += moveRight;
     }
   }
 
