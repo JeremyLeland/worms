@@ -187,208 +187,127 @@ gameCanvas.draw = ( ctx ) => {
   const SW = MaskMap.getTerrain( map, left - 1, bottom, ctx );
   const SE = MaskMap.getTerrain( map, right, bottom, ctx );
 
+  const dir = player.isMovingLeft ? -1 : player.isMovingRight ? 1 : 0;
 
-  if ( player.isMovingLeft ) {
+  const hasFront = dir < 0 ? hasLeft : hasRight;
+  const hasBack  = dir < 0 ? hasRight : hasLeft;
+
+  const toFront = dir < 0 ? toLeft : toRight;
+  const toBack  = dir < 0 ? toRight : toLeft;
+
+  const frontCorner = dir < 0 ? SW : SE;
+  const backCorner  = dir < 0 ? SE : SW;
+
+  const frontIndex = dir < 0 ? left - 1 : right;
+  const backIndex  = dir < 0 ? right : left - 1;
+
+
+  if ( dir !== 0 ) {
   
     // Climbing down long wall behind us (shouldn't happen in game, but enabling for testing)
-    if ( hasRight && !hasBottom ) {
+    if ( hasBack && !hasBottom ) {
       console.log( `Climbing down long wall behind us (shouldn't happen in game, but enabling for testing)` );
 
-      player.pos[ 0 ] += toRight;
+      player.pos[ 0 ] -= dir * toBack;
       player.pos[ 1 ] += PlayerMove;
     }
     
     // Climbing down inner corner behind us
-    else if ( hasRight && hasBottom /* && SE */ ) {
+    else if ( hasBack && hasBottom /* && SE */ ) {
       console.log( `Climbing down inner corner behind us` );
 
       const moveDown = Math.max( 0, Math.min( toBottom, PlayerMove ) );
 
-      if ( toBottom > 0 && toRight < toBottom ) {
-        player.pos[ 0 ] += toRight;
+      if ( toBottom > 0 && toBack < toBottom ) {
+        player.pos[ 0 ] -= dir * toBack;
         player.pos[ 1 ] += moveDown;
       }
       else {
-        player.pos[ 0 ] -= Math.max( 0, toLeft );
+        player.pos[ 0 ] += dir * Math.max( 0, toFront );
         player.pos[ 1 ] += toBottom;
       }
 
-      player.pos[ 0 ] -= PlayerMove - moveDown;
+      player.pos[ 0 ] += dir * ( PlayerMove - moveDown );
     }
     
     // Climbing up inner corner in front of us
-    else if ( MaskMap.getTerrain( map, left - 1, bottom - 1, ctx ) && hasBottom /* && SW */ ) {
+    else if ( MaskMap.getTerrain( map, frontIndex, bottom - 1, ctx ) && hasBottom ) {
       console.log( `Climbing up inner corner in front of us` );
 
-      const moveLeft = Math.max( 0, Math.min( toLeft, PlayerMove ) );
+      const moveForward = Math.max( 0, Math.min( toFront, PlayerMove ) );
 
-      // "toBottom < toLeft" handles where we're actually close to top
-      if ( toLeft > 0 && toBottom < toLeft ) {
+      // "toBottom < toFront" handles where we're actually close to top
+      if ( toFront > 0 && toBottom < toFront ) {
         player.pos[ 1 ] += toBottom;
-        player.pos[ 0 ] -= moveLeft;
+        player.pos[ 0 ] += dir * moveForward;
       }
       else {
-        player.pos[ 0 ] -= toLeft;
+        player.pos[ 0 ] += dir * toFront;
         player.pos[ 1 ] -= Math.max( 0, toTop );
       }
 
       // only climb up if it's exactly 1 up
-      let canClimbLeft = !hasTop;
+      let canClimbForward = !hasTop;
 
-      for ( let y = top; y < bottom - 1 && canClimbLeft; y ++ ) {
-        canClimbLeft = !MaskMap.getTerrain( map, left - 1, y, ctx );
+      for ( let y = top; y < bottom - 1 && canClimbForward; y ++ ) {
+        canClimbForward = !MaskMap.getTerrain( map, frontIndex, y, ctx );
       }
 
-      if ( canClimbLeft ) {
-        player.pos[ 1 ] -= PlayerMove - moveLeft;
+      if ( canClimbForward ) {
+        player.pos[ 1 ] -= PlayerMove - moveForward;
       }
     }
 
     // Climbing up over outer corner in front of us
-    else if ( !hasLeft && !hasBottom && SW ) {
+    else if ( !hasFront && !hasBottom && frontCorner ) {
       console.log( `Climbing up over outer corner in front of us` );
 
       const moveUp = Math.max( 0, Math.min( toTop, PlayerMove ) );
 
       // "toBottom < toLeft" handles overlap
-      if ( toTop > 0 && toBottom < toLeft ) {
-        player.pos[ 0 ] -= toLeft;
+      if ( toTop > 0 && toBottom < toFront ) {
+        player.pos[ 0 ] += dir * toFront;
         player.pos[ 1 ] -= moveUp;
       }
       else {
-        player.pos[ 0 ] -= Math.max( 0, toLeft );
+        player.pos[ 0 ] += dir * Math.max( 0, toFront );
         player.pos[ 1 ] += toBottom;
       }
 
-      player.pos[ 0 ] -= PlayerMove - moveUp;
+      player.pos[ 0 ] += dir * ( PlayerMove - moveUp );
     }
 
     // Starting over the edge of an outer corner behind us
-    else if ( !hasRight && !hasBottom && SE ) {
+    else if ( !hasRight && !hasBottom && backCorner ) {
       console.log( `Starting over the edge of an outer corner behind us` );
 
-      const moveLeft = Math.max( 0, Math.min( toLeft, PlayerMove ) );
+      const moveForward = Math.max( 0, Math.min( toFront, PlayerMove ) );
 
-      if ( toLeft > 0 && toRight < toBottom ) {
-        player.pos[ 0 ] -= moveLeft;
+      if ( toFront > 0 && toBack < toBottom ) {
+        player.pos[ 0 ] += dir * moveForward;
         player.pos[ 1 ] += toBottom;
       }
       else {
-        player.pos[ 0 ] += toRight;
+        player.pos[ 0 ] -= dir * toBack;
         player.pos[ 1 ] += Math.max( 0, toBottom );
       }
 
       // only climb down if it's exactly 1 down
-      if ( MaskMap.getTerrain( map, right - 1, bottom + 1, ctx ) ) {
-        player.pos[ 1 ] += PlayerMove - moveLeft;
+      if ( MaskMap.getTerrain( map, backIndex + dir, bottom + 1, ctx ) ) {
+        player.pos[ 1 ] += PlayerMove - moveForward;
       }
     }
 
     else {
-      console.log( `Moving left` );
+      console.log( `Moving forward` );
 
       // Flat floor
       if ( hasBottom ) {
         player.pos[ 1 ] += toBottom;
       }
 
-      const moveLeft = hasLeft ? Math.max( 0, Math.min( toLeft, PlayerMove ) ) : PlayerMove;
-      player.pos[ 0 ] -= moveLeft;
-    }
-  }
-  else if ( player.isMovingRight ) {
-
-    // Climbing down long wall behind us (shouldn't happen in game, but enabling for testing)
-    if ( hasLeft && !hasBottom ) {
-      player.pos[ 0 ] -= toLeft;
-      player.pos[ 1 ] += PlayerMove;
-    }
-
-    // Climbing down inner corner behind us
-    else if ( hasLeft && hasBottom /* && SW */ ) {
-      const moveDown = Math.max( 0, Math.min( toBottom, PlayerMove ) );
-
-      if ( toBottom > 0 && toLeft < toBottom ) {
-        player.pos[ 0 ] -= toLeft;
-        player.pos[ 1 ] += moveDown;
-      }
-      else {
-        player.pos[ 0 ] += Math.max( 0, toRight );
-        player.pos[ 1 ] += toBottom;
-      }
-
-      player.pos[ 0 ] += PlayerMove - moveDown;
-    }
-
-    // Climbing up inner corner in front of us
-    else if ( MaskMap.getTerrain( map, right, bottom - 1, ctx ) && hasBottom /* && SE */ ) {
-      const moveRight = Math.max( 0, Math.min( toRight, PlayerMove ) );
-
-      if ( toRight > 0 && toBottom < toRight ) {
-        player.pos[ 1 ] += toBottom;
-        player.pos[ 0 ] += moveRight;
-      }
-      else {
-        player.pos[ 0 ] += toRight;
-        player.pos[ 1 ] -= Math.max( 0, toTop );
-      }
-
-      // only climb up if it's exactly 1 up
-      let canClimbRight = !hasTop;
-
-      for ( let y = top; y < bottom - 1 && canClimbRight; y ++ ) {
-        canClimbRight = !MaskMap.getTerrain( map, right, y, ctx );
-      }
-
-      if ( canClimbRight ) {
-        player.pos[ 1 ] -= PlayerMove - moveRight;
-      }
-    }
-
-    // Climbing up over outer corner in front of us
-    else if ( !hasRight && !hasBottom && SE ) {
-      const moveUp = Math.max( 0, Math.min( toTop, PlayerMove ) );
-
-      // "toBottom < toRight" handles overlap
-      if ( toTop > 0 && toBottom < toRight ) {
-        player.pos[ 0 ] += toRight;
-        player.pos[ 1 ] -= moveUp;
-      }
-      else {
-        player.pos[ 0 ] += Math.max( 0, toRight );
-        player.pos[ 1 ] += toBottom;
-      }
-
-      player.pos[ 0 ] += PlayerMove - moveUp;
-    }
-
-    // Starting over the edge of an outer corner behind us
-    else if ( !hasLeft && !hasBottom && SW ) {
-      const moveRight = Math.max( 0, Math.min( toRight, PlayerMove ) );
-
-      if ( toRight > 0 && toLeft < toBottom ) {
-        player.pos[ 0 ] += moveRight;
-        player.pos[ 1 ] += toBottom;
-      }
-      else {
-        player.pos[ 0 ] -= toLeft;
-        player.pos[ 1 ] += Math.max( 0, toBottom );
-      }
-
-      // only climb down if it's exactly 1 down
-      if ( MaskMap.getTerrain( map, left, bottom + 1, ctx ) ) {
-        player.pos[ 1 ] += PlayerMove - moveRight;
-      }
-    }
-
-    else {  
-      // Flat floor
-      if ( hasBottom ) {
-        player.pos[ 1 ] += toBottom;
-      }
-      
-      const moveRight = hasRight ? Math.max( 0, Math.min( toRight, PlayerMove ) ) : PlayerMove;
-      player.pos[ 0 ] += moveRight;
+      const moveForward = hasFront ? Math.max( 0, Math.min( toFront, PlayerMove ) ) : PlayerMove;
+      player.pos[ 0 ] += dir * moveForward;
     }
   }
 

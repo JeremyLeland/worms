@@ -6,6 +6,12 @@
 
   - Broadly, need to make sure extra obstacles properly block us
 
+  - Seeing what chatbots recommend
+    - It suggests "normalizing" directions so you can write it once for left and right
+      - Makes sense
+      - It's a pain to maintain both directions, and this would cut about half the code
+      - DONE: Try this
+
 11/2:
   - Left can make us go up, go down, go left, or do nothing
     - if there is any floor below us, we will not be going down
