@@ -1,3 +1,11 @@
+11/4:
+  - Revisting this after working on bounding box based movement
+    - That had a large box balanced on a single corner pixel
+    - Would prefer a circle closer to the various vertices, I think
+
+  - Revisit sticking to closest line (including endpoint)
+
+
 10/13:
   - Want to try "sticking" to floors/walls
     - Find closest point of wall

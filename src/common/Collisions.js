@@ -1,3 +1,20 @@
+export function pointDistToLineSegment( x, y, x1, y1, x2, y2 ) {
+  const px = x2 - x1;
+  const py = y2 - y1;
+  const D = ( px * px ) + ( py * py );
+
+  if ( D === 0 ) {
+    return Math.hypot( x - x1, y - y1 );
+  }
+
+  const t = Math.max( 0, Math.min( 1, ( ( x - x1 ) * px + ( y - y1 ) * py ) / D ) );
+
+  const closestX = x1 + t * px;
+  const closestY = y1 + t * py;
+
+  return Math.hypot( x - closestX, y - closestY );
+}
+
 // NOTE: The epsilons are important, really! 
 // You're always tempted to just use zero, but the use of EPISILON is the result of a lot of blood, sweat, and debugging
 const EPSILON = 1e-6;

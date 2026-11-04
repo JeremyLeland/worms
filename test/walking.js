@@ -4,6 +4,7 @@
 import * as MaskMap from '../src/MaskMap.js';
 import * as Worms from '../src/Worms.js';
 
+import * as Collisions from '../src/common/Collisions.js';
 import { GameCanvas } from '../src/common/GameCanvas.js';
 import { KeyInput } from '../src/common/KeyInput.js';
 import * as Util from '../src/common/Util.js';
@@ -20,7 +21,7 @@ const map = MaskMap.create( 32, 24, Terrain.Dirt );
 let player = {
   type: 'player',
   id: 'player1',
-  pos: [ 16, 10 ],
+  pos: [ 16.5, 13.5 ],
   vel: [ 0, 0 ],
   radius: 2,
   isMovingUp: false,
@@ -35,7 +36,7 @@ let player = {
 
 let debugInfo;
 
-const Gravity = 0.0005;
+const Gravity = 0.0001; //0.0005;
 const PlayerMoveSpeed = 0.003;
 const PlayerJumpSpeed = 0.1;
 const PlayerRopeNudgeSpeed = 0.001;
@@ -81,115 +82,6 @@ foregroundCtx.fillRect( 0, 0, map.cols, map.rows );
 const gameCanvas = new GameCanvas();
 gameCanvas.setBounds( 0, 0, map.cols, map.rows );
 
-gameCanvas.update = ( dt ) => {
-  debugInfo = {};
-
-  const newEntities = [];
-
-  entities.forEach( entity => {
-
-    // if ( entity.isMovingLeft ) {
-    //   entity.vel[ 0 ] = -PlayerMoveSpeed;
-    // }
-    // else if ( entity.isMovingRight ) {
-    //   entity.vel[ 0 ] = PlayerMoveSpeed;
-    // }
-    // else {
-    //   entity.vel[ 0 ] = 0;
-    // }
-
-
-    //
-    // Apply forces
-    //
-    
-    const forces = vec2.fromValues( 0, Gravity );
-    
-    vec2.scaleAndAdd( entity.vel, entity.vel, forces, dt );
-
-    let timeLeft = dt;
-
-    console.log();
-
-    for ( let step = 0; step < 2; step ++ ) {
-      const bestHit = Worms.getHit( map, entity, timeLeft );
-
-      if ( bestHit.time < Infinity ) {
-        console.log( bestHit );
-
-        debugInfo.bestHit = bestHit;
-
-        vec2.scaleAndAdd( entity.pos, entity.pos, entity.vel, bestHit.time );
-
-        // Move out of collision a bit?
-        //  - lets us fall, but not climb
-        // vec2.scaleAndAdd( entity.pos, entity.pos, bestHit.norm, 0.01 );
-
-        // Walk along edge
-
-        const moveDir = entity.isMovingLeft ? -1 : entity.isMovingRight ? 1 : 0;
-        const moveVec = [ -moveDir * bestHit.norm[ 1 ], moveDir * bestHit.norm[ 0 ] ];
-
-        debugInfo.moveVec = moveVec;
-
-        vec2.scale( entity.vel, moveVec, PlayerMoveSpeed );
-
-        // console.log( `after step ${ step }, player vel `, player.vel );
-
-        // // Left/Right wall
-        // if ( bestHit.norm[ 1 ] === 0 ) {
-        //   // Climb wall if it's only 1 tall
-        //   //  - if we're moving left, the line we hit is at testX + 1
-        //   //  - use the correct bestHit.line y based on orientation
-        //   // const testCol = Math.floor( bestHit.line[ 0 ] ) + ( entity.vel[ 0 ] < 0 ? -1 : 0 );
-        //   // const testRow = Math.floor( bestHit.line[ entity.vel[ 0 ] < 0 ? 1 : 3 ] ) - 1;
-
-        //   // if ( 0 <= testRow && map.data[ testCol + testRow * map.cols ] == Terrain.Empty ) {
-        //     // entity.vel[ 1 ] = -PlayerMoveSpeed;   // TOOD: slower as we get toward top so we don't "hop" so much?
-        //   // }
-
-        //   // entity.vel[ 0 ] = 0;//entity.isMovingLeft ? -PlayerMoveSpeed : entity.isMovingRight ? PlayerMoveSpeed : 0;
-          
-        //   console.log( 'wall' );
-
-          
-        // }
-
-        // // Ceiling/Floor
-        // else {
-        //   // Floor
-        //   if ( bestHit.norm[ 1 ] === -1 ) {
-        //     // entity.vel[ 0 ] = entity.isMovingLeft ? -PlayerMoveSpeed : entity.isMovingRight ? PlayerMoveSpeed : 0;
-        //     // entity.vel[ 1 ] = entity.isJumping ? -PlayerJumpSpeed : 0;
-
-        //     console.log( 'floor' );
-
-        //   }
-
-        //   // Ceiling
-        //   else {
-        //     entity.vel[ 1 ] = 0;
-        //   }
-        // }
-
-        timeLeft -= bestHit.time;
-
-        
-      }
-      else {
-        vec2.scaleAndAdd( entity.pos, entity.pos, entity.vel, timeLeft );
-
-        break;
-      }
-    }
-  } );
-
-  // Remove expired entities
-  entities = entities.filter( e => e.health > 0 );
-
-  // Add new entities
-  entities.push( ...newEntities );
-}
 
 gameCanvas.draw = ( ctx ) => {
   ctx.shadowColor = 'transparent';
@@ -199,56 +91,132 @@ gameCanvas.draw = ( ctx ) => {
   MaskMap.makeMaskTransparent( foregroundCtx, map, Terrain.Empty );
   ctx.drawImage( foregroundImage, 0, 0 );
 
-  Worms.drawEntities( ctx, entities );
+  // Worms.drawEntities( ctx, entities );
 
-  ctx.strokeStyle = 'cyan';
-  ctx.lineWidth = 0.1;
-  Util.drawLine( ctx, player.pos, vec2.scaleAndAdd( [], player.pos, player.vel, 100 ) );
+  ctx.fillStyle = '#fff6';
+  Util.drawPoint( ctx, player.pos, player.radius );
 
-  if ( debugInfo.bestHit ) {
-    ctx.fillStyle = 'yellow';
-    Util.drawPoint( ctx, debugInfo.bestHit.pos, 0.1 );
+  
+  const minX = player.pos[ 0 ] - player.radius;
+  const minY = player.pos[ 1 ] - player.radius;
+  const maxX = player.pos[ 0 ] + player.radius;
+  const maxY = player.pos[ 1 ] + player.radius;
 
-    ctx.strokeStyle = 'yellow';
-    ctx.lineWidth = 0.1;
-    Util.drawLine( ctx, debugInfo.bestHit.pos, vec2.scaleAndAdd( [], debugInfo.bestHit.pos, debugInfo.bestHit.norm, 1 ) );
+  const SnapDist = 1;
+  
+  const testLeft = Math.floor( minX - SnapDist );
+  const testTop  = Math.floor( minY - SnapDist );
+  const testRight = Math.floor( maxX + SnapDist );
+  const testBottom = Math.floor( maxY + SnapDist );
 
-    if ( debugInfo.moveVec ) {
-      ctx.strokeStyle = 'white';
-      ctx.lineWidth = 0.1;
-      Util.drawLine( ctx, debugInfo.bestHit.pos, vec2.scaleAndAdd( [], debugInfo.bestHit.pos, debugInfo.moveVec, 1 ) );
+  const closest = {
+    dist: SnapDist,
+  };
+  
+  for ( let testRow = testTop; testRow <= testBottom; testRow ++ ) {
+    for ( let testCol = testLeft; testCol <= testRight; testCol ++ ) {
+      
+      ctx.lineWidth = 0.05;
+      ctx.strokeStyle = '#fff4';
+      if ( MaskMap.getTerrain( map, testCol, testRow, ctx ) ) {
+        
+        const lines = [
+          [ testCol, testRow + 1, testCol, testRow ],         // left
+          [ testCol, testRow, testCol + 1, testRow ],         // top
+          [ testCol + 1, testRow, testCol + 1, testRow + 1 ], // right
+          [ testCol + 1, testRow + 1, testCol, testRow + 1 ], // bottom
+        ];
+
+        lines.forEach( line => {
+          
+          const [ x, y ] = player.pos;
+          const [ x1, y1, x2, y2 ] = line;
+
+          const px = x2 - x1;
+          const py = y2 - y1;
+          const D = ( px * px ) + ( py * py );
+
+          const t = D === 0 ? 0 : Math.max( 0, Math.min( 1, ( ( x - x1 ) * px + ( y - y1 ) * py ) / D ) );
+
+          const closestX = x1 + t * px;
+          const closestY = y1 + t * py;
+
+          const dist = Math.hypot( x - closestX, y - closestY ) - player.radius;
+
+          if ( dist < closest.dist ) {
+            closest.dist = dist;
+            closest.pos = [ closestX, closestY ];
+          }
+
+          const val = Math.max( 0, 1 - dist ) * 255;
+
+          ctx.fillStyle = `rgb( 0, 0, ${ val })`;
+          Util.drawPoint( ctx, [ closestX, closestY ], 0.1 );
+
+        } );
+      }
     }
+  }
+
+  if ( closest.pos ) {
+    ctx.fillStyle = 'white';
+    Util.drawPoint( ctx, closest.pos, 0.1 );
+
+    const norm = vec2.sub( [], player.pos, closest.pos );
+    vec2.normalize( norm, norm );
+
+    Util.drawLine( ctx, closest.pos, vec2.scaleAndAdd( [], closest.pos, norm, SnapDist ) );
+
+    const moveDir = player.isMovingLeft ? -1 : player.isMovingRight ? 1 : 0;
+    const moveVec = [ -moveDir * norm[ 1 ], moveDir * norm[ 0 ] ];
+
+    Util.drawLine( ctx, player.pos, vec2.scaleAndAdd( [], player.pos, moveVec, SnapDist ) );
   }
 }
 
 
 
-const keyInput = new KeyInput();
+// const keyInput = new KeyInput();
 
-keyInput.Keys = {
-  PlayerUp: 'w',
-  PlayerLeft: 'a',
-  PlayerDown: 's',
-  PlayerRight: 'd',
-  PlayerJump: ' ',
-  ToggleUpdates: 'p',
-};
+// keyInput.Keys = {
+//   PlayerUp: 'w',
+//   PlayerLeft: 'a',
+//   PlayerDown: 's',
+//   PlayerRight: 'd',
+//   PlayerJump: ' ',
+//   ToggleUpdates: 'p',
+// };
 
-keyInput.Actions = {
-  PlayerUp:     x => player.isMovingUp = x,
-  PlayerLeft:   x => player.isMovingLeft = x,
-  PlayerDown:   x => player.isMovingDown = x,
-  PlayerRight:  x => player.isMovingRight = x,
-  PlayerJump:   x => player.isJumping = x,
+// keyInput.Actions = {
+//   PlayerUp:     x => player.isMovingUp = x,
+//   PlayerLeft:   x => player.isMovingLeft = x,
+//   PlayerDown:   x => player.isMovingDown = x,
+//   PlayerRight:  x => player.isMovingRight = x,
+//   PlayerJump:   x => player.isJumping = x,
 
-  ToggleUpdates: x => { if ( x ) gameCanvas.toggle() },
-};
+//   ToggleUpdates: x => { if ( x ) gameCanvas.toggle() },
+// };
 
-document.addEventListener( 'pointerdown', e => {
+function keyInput( e ) {
+  player.isMovingLeft = e.key === 'a';
+  player.isMovingRight = e.key === 'd';
+
+  gameCanvas.redraw();
+}
+
+document.addEventListener( 'keydown', keyInput );
+document.addEventListener( 'keyup', keyInput );
+
+function pointerInput( e ) {
   if ( e.buttons === 2 ) {
     player.pos[ 0 ] = gameCanvas.getX( e.x );
     player.pos[ 1 ] = gameCanvas.getY( e.y );
-  }
-} );
 
-gameCanvas.start();
+    gameCanvas.redraw();
+  }
+}
+
+document.addEventListener( 'pointerdown', pointerInput );
+document.addEventListener( 'pointermove', pointerInput );
+
+// gameCanvas.start();
