@@ -5,7 +5,9 @@
 
 import * as MaskMap from '../src/MaskMap.js';
 
+import * as Collisions from '../src/common/Collisions.js';
 import { GameCanvas } from '../src/common/GameCanvas.js';
+import * as Worms from '../src/Worms.js';
 import * as Util from '../src/common/Util.js';
 import { vec2 } from '../lib/gl-matrix.js';
 
@@ -32,6 +34,9 @@ let player = {
   health: 100,
 };
 
+const Gravity = 0.0005;
+const PlayerMoveSpeed = 0.01;
+const PlayerJumpSpeed = 0.1;
 
 const mousePos = [ 21, 20 ];
 
@@ -53,68 +58,90 @@ const gameCanvas = new GameCanvas();
 gameCanvas.setBounds( 0, 0, map.cols, map.rows );
 
 
+const hitFunc = ( entity, line ) => Collisions.timeToBoxHitLine( ...entity.pos, ...entity.vel, entity.radius, ...line );
+
 gameCanvas.update = ( dt ) => {
-  const minX = player.pos[ 0 ] - player.radius;
-  const minY = player.pos[ 1 ] - player.radius;
-  const maxX = player.pos[ 0 ] + player.radius;
-  const maxY = player.pos[ 1 ] + player.radius;
-
-  const left   = Math.round( minX );
-  const top    = Math.round( minY );
-  const right  = Math.round( maxX );
-  const bottom = Math.round( maxY );
-
-  const toLeft   = minX - left;
-  const toTop    = minY - top
-  const toRight  = right - maxX;
-  const toBottom = bottom - maxY;
-
-  let hasLeft = false;
-  let hasTop = false;
-  let hasRight = false;
-  let hasBottom = false;
-
-  for ( let y = top; y < bottom && !hasLeft; y ++ ) {
-    hasLeft = !!MaskMap.getTerrain( map, left - 1, y );
-  }
-
-  for ( let x = left; x < right && !hasTop; x ++ ) {
-    hasTop = !!MaskMap.getTerrain( map, x, top - 1 );
-  }
-
-  for ( let y = top; y < bottom && !hasRight; y ++ ) {
-    hasRight = !!MaskMap.getTerrain( map, right, y );
-  }
-
-  for ( let x = left; x < right && !hasBottom; x ++ ) {
-    hasBottom = !!MaskMap.getTerrain( map, x, bottom );
-  }
-
-  const SW = MaskMap.getTerrain( map, left - 1, bottom );
-  const SE = MaskMap.getTerrain( map, right, bottom );
 
   const dir = player.isMovingLeft ? -1 : player.isMovingRight ? 1 : 0;
 
-  const hasFront = dir < 0 ? hasLeft : hasRight;
-  const hasBack  = dir < 0 ? hasRight : hasLeft;
+  // TODO: Not if rope
+  // player.vel[ 0 ] = dir * PlayerMoveSpeed;
 
-  const toFront = dir < 0 ? toLeft : toRight;
-  const toBack  = dir < 0 ? toRight : toLeft;
+  
+  const entity = player;
 
-  const frontCorner = dir < 0 ? SW : SE;
-  const backCorner  = dir < 0 ? SE : SW;
+  //
+  // Forces
+  //
 
-  const frontIndex = dir < 0 ? left - 1 : right;
-  const backIndex  = dir < 0 ? right : left - 1;
+  const forces = vec2.fromValues( 0, Gravity );
+
+  vec2.scaleAndAdd( entity.vel, entity.vel, forces, dt );
 
 
-  const PlayerMove = 0.02 * dt;
-
-
+  //
+  // Walking
+  //
   if ( dir !== 0 ) {
+
+    const minX = player.pos[ 0 ] - player.radius;
+    const minY = player.pos[ 1 ] - player.radius;
+    const maxX = player.pos[ 0 ] + player.radius;
+    const maxY = player.pos[ 1 ] + player.radius;
+
+    const left   = Math.round( minX );
+    const top    = Math.round( minY );
+    const right  = Math.round( maxX );
+    const bottom = Math.round( maxY );
+
+    const toLeft   = minX - left;
+    const toTop    = minY - top
+    const toRight  = right - maxX;
+    const toBottom = bottom - maxY;
+
+    let hasLeft = false;
+    let hasTop = false;
+    let hasRight = false;
+    let hasBottom = false;
+
+    for ( let y = top; y < bottom && !hasLeft; y ++ ) {
+      hasLeft = !!MaskMap.getTerrain( map, left - 1, y );
+    }
+
+    for ( let x = left; x < right && !hasTop; x ++ ) {
+      hasTop = !!MaskMap.getTerrain( map, x, top - 1 );
+    }
+
+    for ( let y = top; y < bottom && !hasRight; y ++ ) {
+      hasRight = !!MaskMap.getTerrain( map, right, y );
+    }
+
+    for ( let x = left; x < right && !hasBottom; x ++ ) {
+      hasBottom = !!MaskMap.getTerrain( map, x, bottom );
+    }
+
+    const SW = MaskMap.getTerrain( map, left - 1, bottom );
+    const SE = MaskMap.getTerrain( map, right, bottom );
+
+
+    const hasFront = dir < 0 ? hasLeft : hasRight;
+    const hasBack  = dir < 0 ? hasRight : hasLeft;
+
+    const toFront = dir < 0 ? toLeft : toRight;
+    const toBack  = dir < 0 ? toRight : toLeft;
+
+    const frontCorner = dir < 0 ? SW : SE;
+    const backCorner  = dir < 0 ? SE : SW;
+
+    const frontIndex = dir < 0 ? left - 1 : right;
+    const backIndex  = dir < 0 ? right : left - 1;
+
+
+    const PlayerMove = PlayerMoveSpeed * dt;
   
     // Climbing down long wall behind us (shouldn't happen in game, but enabling for testing)
     if ( hasBack && !hasBottom ) {
+      vec2.set( player.vel, 0, 0 );
       console.log( `Climbing down long wall behind us (shouldn't happen in game, but enabling for testing)` );
 
       player.pos[ 0 ] -= dir * toBack;
@@ -123,6 +150,7 @@ gameCanvas.update = ( dt ) => {
     
     // Climbing down inner corner behind us
     else if ( hasBack && hasBottom /* && SE */ ) {
+      vec2.set( player.vel, 0, 0 );
       console.log( `Climbing down inner corner behind us` );
 
       const moveDown = Math.max( 0, Math.min( toBottom, PlayerMove ) );
@@ -141,6 +169,7 @@ gameCanvas.update = ( dt ) => {
     
     // Climbing up inner corner in front of us
     else if ( MaskMap.getTerrain( map, frontIndex, bottom - 1 ) && hasBottom ) {
+      vec2.set( player.vel, 0, 0 );
       console.log( `Climbing up inner corner in front of us` );
 
       const moveForward = Math.max( 0, Math.min( toFront, PlayerMove ) );
@@ -169,6 +198,7 @@ gameCanvas.update = ( dt ) => {
 
     // Climbing up over outer corner in front of us
     else if ( !hasFront && !hasBottom && frontCorner ) {
+      vec2.set( player.vel, 0, 0 );
       console.log( `Climbing up over outer corner in front of us` );
 
       const moveUp = Math.max( 0, Math.min( toTop, PlayerMove ) );
@@ -188,6 +218,7 @@ gameCanvas.update = ( dt ) => {
 
     // Starting over the edge of an outer corner behind us
     else if ( !hasRight && !hasBottom && backCorner ) {
+      vec2.set( player.vel, 0, 0 );
       console.log( `Starting over the edge of an outer corner behind us` );
 
       const moveForward = Math.max( 0, Math.min( toFront, PlayerMove ) );
@@ -207,16 +238,55 @@ gameCanvas.update = ( dt ) => {
       }
     }
 
-    else {
-      console.log( `Moving forward` );
-
-      // Flat floor
-      if ( hasBottom ) {
-        player.pos[ 1 ] += toBottom;
-      }
+    // Flat floor
+    else if ( hasBottom ) {
+      vec2.set( player.vel, 0, 0 );
+      console.log( `Moving forward on flat floor` );
 
       const moveForward = hasFront ? Math.max( 0, Math.min( toFront, PlayerMove ) ) : PlayerMove;
       player.pos[ 0 ] += dir * moveForward;
+      player.pos[ 1 ] += toBottom;
+    }
+
+    // Moving in air (do we still want this?)
+    else {
+      player.vel[ 0 ] = dir * PlayerMoveSpeed;
+      console.log( `Moving through air` );
+    }
+  }
+
+  let timeLeft = dt;
+  
+  for ( let step = 0; step < 2; step ++ ) {
+    const bestHit = Worms.getHit( map, entity, timeLeft, hitFunc );
+
+    if ( bestHit.time < Infinity ) {
+      vec2.scaleAndAdd( entity.pos, entity.pos, entity.vel, bestHit.time );
+
+      // Left/Right wall
+      if ( bestHit.line[ 0 ] === bestHit.line[ 2 ] ) {
+        entity.vel[ 0 ] = 0;
+      }
+
+      // Ceiling/Floor
+      else {
+        // Floor
+        if ( bestHit.line[ 0 ] < bestHit.line[ 2 ] ) {
+          entity.vel[ 1 ] = entity.isJumping ? -PlayerJumpSpeed : 0;
+        }
+
+        // Ceiling
+        else {
+          entity.vel[ 1 ] = 0;
+        }
+      }
+
+      timeLeft -= bestHit.time;
+    }
+    else {
+      vec2.scaleAndAdd( entity.pos, entity.pos, entity.vel, timeLeft );
+
+      break;
     }
   }
 }
@@ -240,6 +310,7 @@ gameCanvas.start();
 document.addEventListener( 'keydown', e => {
   player.isMovingLeft = e.key == 'a';
   player.isMovingRight = e.key == 'd';
+  player.isJumping = e.key == ' ';
 
   // gameCanvas.redraw();
 } );
@@ -247,6 +318,7 @@ document.addEventListener( 'keydown', e => {
 document.addEventListener( 'keyup', e => {
   player.isMovingLeft = false;
   player.isMovingRight = false;
+  player.isJumping = false;
 } );
 
 function pointerInput( e ) {
@@ -255,6 +327,7 @@ function pointerInput( e ) {
 
   if ( e.buttons === 2 ) {
     vec2.copy( player.pos, mousePos );
+    vec2.set( player.vel, 0, 0 );
     
     // gameCanvas.redraw();
   }

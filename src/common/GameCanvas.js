@@ -141,6 +141,8 @@ export class GameCanvas {
     }
 
     this.ctx.save(); {
+
+      // NOTE: Was passing in bounds to help with drawing UI relative to viewport
       this.draw( this.ctx, this.#bounds );
     }
     this.ctx.restore();

@@ -28,8 +28,8 @@ function pointDistToLineSegment( x, y, x1, y1, x2, y2 ) {
 }
 
 export function timeToBoxHitLine( x, y, dx, dy, radius, x1, y1, x2, y2 ) {
-  const xDir = Math.sign( dx );
-  const yDir = Math.sign( dy );
+  const xDir = dx < 0 ? -1 : 1; //Math.sign( dx );  // below assumes non-zero xDir/yDir
+  const yDir = dy < 0 ? -1 : 1; //Math.sign( dy );
 
   const Ax = x - xDir * radius;
   const Ay = y - yDir * radius;

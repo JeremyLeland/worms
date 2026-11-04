@@ -1,3 +1,29 @@
+11/4:
+  - Trying to mix physics back into my walking demo
+  - timeToBoxHitLine doesn't work if you drop it straight down?
+    - Assumes xDir and yDir will be -1 or 1, not zero
+      - if it's zero, then we only need to check one line instead of two
+      - how to account for this?
+      - can make array of points and lines to test...
+      - or can keep comparing result against best so far (and avoid making arrays)
+    - Just ensure xDir/yDir is -1 or 1 for now
+
+  - Try setting velocities instead of manually moving?
+    - Then use velocity and collision check for actual move?
+      - Would need to call this in two stages for corners
+        - so include with the for( step ) code?
+    - No, because this was the whole point of the corner problem
+      - We won't hit anything when going off a corner
+    - Just set the velocity to zero manually for now, see if that works
+
+  - Well, this does what I told it to
+    - But you get squares that barely rest on a pixel, especially when going up a 45 degree slope
+    - I feel like a circle would look better
+    - Get this working the rest of the way, at least with jumping (and maybe rope?)
+      - For completeness sake
+    - But it might be time to play with circles snapping to vertices
+      - remind me what all the problems I was having before were...
+
 11/3:
   - DONE: Try copying old vertex logic to new test, using edges and corner instead of vertex type
   - DONE: Check for ceiling before going up
