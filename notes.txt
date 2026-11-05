@@ -8,6 +8,12 @@
     - Limit the move vector?
       - Won't work in initial tests with big blocks, but might be usable when we're bigger
         - Seems to work for now
+  - Make it realtime and add jumping back in
+    - Need to make sure we don't snap while jumping
+      - Check for movement before snapping?
+        - Check direction of movement before snapping?
+
+  - DONE: Added Jumping and movement in air
 
 11/4:
   - Revisting this after working on bounding box based movement

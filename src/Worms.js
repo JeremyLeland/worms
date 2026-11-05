@@ -97,16 +97,16 @@ export function getHit( map, entity, dt, debugCtx ) {
         ];
 
         lines.forEach( line => {
-          const hit = Collisions.timeToCircleHitLine( x, y, dx, dy, r, ...line );
+          const hitTime = Collisions.timeToCircleHitLine( x, y, dx, dy, r, ...line );
 
           // if ( hitTime < Infinity ) {
           //   console.log( '  hitTime for ', line, ' is ', hitTime );
           // }
 
           // Make sure hitTime is within our update window, helps avoid other weirdness
-          if ( hit.time < bestHit.time && hit.time < dt ) {
-            bestHit = hit;
-            // bestHit.line = line;
+          if ( hitTime < bestHit.time && hitTime < dt ) {
+            bestHit.time = hitTime;
+            bestHit.line = line;
           }
 
           if ( debugCtx ) {
