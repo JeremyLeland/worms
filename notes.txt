@@ -1,3 +1,14 @@
+11/5:
+  - Sticking to closest point on line seems way easier
+  - DONE: Simply finding closest point, snapping to it, then moving perpendicular to normal looks pretty good!
+    - It often moves us into collision, but next frame should fix it
+      - Is it worth doing the snap twice per frame so we can be exact?
+        - Just wait for now
+  - DONE: How to avoid going up too steep a slope?
+    - Limit the move vector?
+      - Won't work in initial tests with big blocks, but might be usable when we're bigger
+        - Seems to work for now
+
 11/4:
   - Revisting this after working on bounding box based movement
     - That had a large box balanced on a single corner pixel

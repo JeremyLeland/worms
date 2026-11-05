@@ -16,14 +16,18 @@ const Terrain = {
   Rock: 2,
 };
 
-const map = MaskMap.create( 32, 24, Terrain.Dirt );
+const map = MaskMap.create( 160, 120, 1 );
+
+MaskMap.setTerrainCircle( map, 30, 30, 30, 0 );
+MaskMap.setTerrainCircle( map, 80, 40, 60, 0 );
+MaskMap.setTerrainCircle( map, 120, 60, 30, 0 );
 
 let player = {
   type: 'player',
   id: 'player1',
-  pos: [ 16.5, 13.5 ],
+  pos: [ 92, 92 ],
   vel: [ 0, 0 ],
-  radius: 2,
+  radius: 8,
   isMovingUp: false,
   isMovingLeft: false,
   isMovingDown: false,
@@ -37,10 +41,12 @@ let player = {
 let debugInfo;
 
 const Gravity = 0.0001; //0.0005;
-const PlayerMoveSpeed = 0.01; //0.003;
+const PlayerMoveSpeed = 0.1; //0.003;
 const PlayerJumpSpeed = 0.1;
 const PlayerRopeNudgeSpeed = 0.001;
 const PlayerRopeLengthSpeed = 0.075;
+
+const MaxSlope = 1.5;
 
 
 const BulletSpeed = 0.5;
@@ -58,14 +64,6 @@ const mousePos = [ 20.4, 20 ];
 let entities = [ player ];
 
 
-MaskMap.setTerrainRect( map, 5, 8, 20, 5, Terrain.Empty );
-MaskMap.setTerrainRect( map, 2, 10, 25, 6, Terrain.Empty );
-MaskMap.setTerrainRect( map, 5, 7, 4, 6, Terrain.Empty );
-// MaskMap.setTerrainRect( map, 20, 4, 8, 15, Terrain.Empty );
-MaskMap.setTerrainRect( map, 15, 4, 8, 15, Terrain.Empty );
-
-// MaskMap.setTerrainRect( map, 10, 16, 10, 1, Terrain.Empty );
-// MaskMap.setTerrainRect( map, 15, 17, 5, 1, Terrain.Empty );
 
 
 const backgroundImage = new OffscreenCanvas( map.cols, map.rows );
@@ -166,16 +164,19 @@ gameCanvas.draw = ( ctx ) => {
 
     const norm = vec2.sub( [], player.pos, closest.pos );
     vec2.normalize( norm, norm );
+    vec2.scaleAndAdd( player.pos, closest.pos, norm, player.radius );
 
-    Util.drawLine( ctx, closest.pos, vec2.scaleAndAdd( [], closest.pos, norm, SnapDist ) );
+    const slope = norm[ 0 ] / norm[ 1 ];
+    console.log( slope );
 
     const moveDir = player.isMovingLeft ? -1 : player.isMovingRight ? 1 : 0;
-    const moveVec = [ -moveDir * norm[ 1 ], moveDir * norm[ 0 ] ];
 
-    // Util.drawLine( ctx, player.pos, vec2.scaleAndAdd( [], player.pos, moveVec, SnapDist ) );
-
-    vec2.scaleAndAdd( player.pos, closest.pos, norm, player.radius );
-    vec2.scaleAndAdd( player.pos, player.pos, moveVec, PlayerMoveSpeed * dt );
+    // Make sure we can always go down a slope, just not up
+    if ( moveDir * slope < MaxSlope ) {
+      const moveVec = [ -moveDir * norm[ 1 ], moveDir * norm[ 0 ] ];
+      
+      vec2.scaleAndAdd( player.pos, player.pos, moveVec, PlayerMoveSpeed * dt );
+    }
   }
 }
 
