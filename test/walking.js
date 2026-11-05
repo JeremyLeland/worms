@@ -37,7 +37,7 @@ let player = {
 let debugInfo;
 
 const Gravity = 0.0001; //0.0005;
-const PlayerMoveSpeed = 0.003;
+const PlayerMoveSpeed = 0.01; //0.003;
 const PlayerJumpSpeed = 0.1;
 const PlayerRopeNudgeSpeed = 0.001;
 const PlayerRopeLengthSpeed = 0.075;
@@ -158,6 +158,8 @@ gameCanvas.draw = ( ctx ) => {
     }
   }
 
+  const dt = 10;
+
   if ( closest.pos ) {
     ctx.fillStyle = 'white';
     Util.drawPoint( ctx, closest.pos, 0.1 );
@@ -170,42 +172,36 @@ gameCanvas.draw = ( ctx ) => {
     const moveDir = player.isMovingLeft ? -1 : player.isMovingRight ? 1 : 0;
     const moveVec = [ -moveDir * norm[ 1 ], moveDir * norm[ 0 ] ];
 
-    Util.drawLine( ctx, player.pos, vec2.scaleAndAdd( [], player.pos, moveVec, SnapDist ) );
+    // Util.drawLine( ctx, player.pos, vec2.scaleAndAdd( [], player.pos, moveVec, SnapDist ) );
+
+    vec2.scaleAndAdd( player.pos, closest.pos, norm, player.radius );
+    vec2.scaleAndAdd( player.pos, player.pos, moveVec, PlayerMoveSpeed * dt );
   }
 }
 
 
 
-// const keyInput = new KeyInput();
+const keyInput = new KeyInput( () => gameCanvas.redraw() );
 
-// keyInput.Keys = {
-//   PlayerUp: 'w',
-//   PlayerLeft: 'a',
-//   PlayerDown: 's',
-//   PlayerRight: 'd',
-//   PlayerJump: ' ',
-//   ToggleUpdates: 'p',
-// };
+keyInput.Keys = {
+  PlayerUp: 'w',
+  PlayerLeft: 'a',
+  PlayerDown: 's',
+  PlayerRight: 'd',
+  PlayerJump: ' ',
+  ToggleUpdates: 'p',
+};
 
-// keyInput.Actions = {
-//   PlayerUp:     x => player.isMovingUp = x,
-//   PlayerLeft:   x => player.isMovingLeft = x,
-//   PlayerDown:   x => player.isMovingDown = x,
-//   PlayerRight:  x => player.isMovingRight = x,
-//   PlayerJump:   x => player.isJumping = x,
+keyInput.Actions = {
+  PlayerUp:     x => player.isMovingUp = x,
+  PlayerLeft:   x => player.isMovingLeft = x,
+  PlayerDown:   x => player.isMovingDown = x,
+  PlayerRight:  x => player.isMovingRight = x,
+  PlayerJump:   x => player.isJumping = x,
 
-//   ToggleUpdates: x => { if ( x ) gameCanvas.toggle() },
-// };
+  ToggleUpdates: x => { if ( x ) gameCanvas.toggle() },
+};
 
-function keyInput( e ) {
-  player.isMovingLeft = e.key === 'a';
-  player.isMovingRight = e.key === 'd';
-
-  gameCanvas.redraw();
-}
-
-document.addEventListener( 'keydown', keyInput );
-document.addEventListener( 'keyup', keyInput );
 
 function pointerInput( e ) {
   if ( e.buttons === 2 ) {
