@@ -1,3 +1,8 @@
+11/7:
+  - If slope is in walk range, just do walking
+  - If slope is outside walk range, apply gravity
+    - gravity times abs( x component of normal ) * move vector
+
 11/5:
   - Sticking to closest point on line seems way easier
   - DONE: Simply finding closest point, snapping to it, then moving perpendicular to normal looks pretty good!
@@ -14,6 +19,14 @@
         - Check direction of movement before snapping?
 
   - DONE: Added Jumping and movement in air
+
+  - NEXT:
+    - Keep track of angle to ground as well as slope of ground?
+      - Account for fact that I can 'hang on by a thread' to some of the dirt circles
+      - I should fall off of these much quicker
+    - Maybe what we need is to slide down slopes that are too steep for us to walk
+      - That would bring us off the edge of the circles, I think
+      - Add portion of gravity instead of PlayerMoveSpeed if too steep?
 
 11/4:
   - Revisting this after working on bounding box based movement

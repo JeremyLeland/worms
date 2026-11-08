@@ -22,6 +22,10 @@ MaskMap.setTerrainCircle( map, 30, 30, 30, 0 );
 MaskMap.setTerrainCircle( map, 80, 40, 60, 0 );
 MaskMap.setTerrainCircle( map, 120, 60, 30, 0 );
 
+MaskMap.setTerrainCircle( map, 50, 40, 10, 1 );
+MaskMap.setTerrainCircle( map, 70, 50, 20, 1 );
+MaskMap.setTerrainCircle( map, 100, 40, 10, 1 );
+
 let player = {
   type: 'player',
   id: 'player1',
@@ -46,7 +50,7 @@ const PlayerJumpSpeed = 0.1;
 const PlayerRopeNudgeSpeed = 0.001;
 const PlayerRopeLengthSpeed = 0.075;
 
-const MoveMaxSlope = 1;
+const MoveMaxSlope = 1.3;
 const GroundSnapDist = 1;
 
 const BulletSpeed = 0.5;
