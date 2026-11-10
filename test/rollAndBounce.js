@@ -134,37 +134,38 @@ gameCanvas.draw = ( ctx ) => {
     // TODO: Back out of any overlap, or snap if we're on ground
     // if ( closest.dist < 0 || onGround ) {
       vec2.scaleAndAdd( player.pos, closest.pos, groundNormal, player.radius );
-
+      
       ctx.fillStyle = '#fa08';
       Util.drawPoint( ctx, player.pos, player.radius );
+      
+      const tangentDir = Math.sign( groundNormal[ 0 ] );
+      
+      ctx.lineWidth = 0.2;
+      if ( tangentDir !== 0 ) {
 
-      const rollDir = Math.sign( groundNormal[ 0 ] );
+        const groundTangent = [ -tangentDir * groundNormal[ 1 ], tangentDir * groundNormal[ 0 ] ];
 
-      if ( rollDir !== 0 ) {
-
-        const rollVec = [ -rollDir * groundNormal[ 1 ], rollDir * groundNormal[ 0 ] ];
-        
-        const velocityAlongSlope = vec2.dot( GravityVec, rollVec );
-        console.log( velocityAlongSlope );
-        
-        ctx.lineWidth = 0.2;
         ctx.strokeStyle = 'cyan';
-        Util.drawLine( ctx, closest.pos, vec2.scaleAndAdd( [], closest.pos, rollVec, dt ) );
+        Util.drawLine( ctx, closest.pos, vec2.scaleAndAdd( [], closest.pos, groundTangent, dt ) );
         
+        const gravityAlongSlope = vec2.dot( GravityVec, groundTangent );
+        console.log( gravityAlongSlope );
+
+        const acceleration = gravityAlongSlope * ( 5 / 7 );   // "for a solid sphere rolling without slipping"
+        
+        console.log( 'old vel', player.vel );
         ctx.strokeStyle = 'orange';
         Util.drawLine( ctx, closest.pos, vec2.scaleAndAdd( [], closest.pos, player.vel, 1000 ) );
         
-        
-        const oldSpeed = vec2.length( player.vel );
-        const newSpeed = oldSpeed + velocityAlongSlope * dt;
-        vec2.scale( player.vel, rollVec, newSpeed );
-        
-        console.log( oldSpeed, '->', newSpeed );
-        
-        console.log( player.vel );
-        
-        ctx.strokeStyle = 'yellow';
-        Util.drawLine( ctx, closest.pos, vec2.scaleAndAdd( [], closest.pos, player.vel, 1000 ) );
+        vec2.scaleAndAdd( player.vel, player.vel, groundTangent, acceleration * dt );
+
+        // Try to keep us out of the ground??
+        const normalVelocity = vec2.dot( player.vel, groundNormal );
+
+        if ( normalVelocity < 0 ) {
+          vec2.scaleAndAdd( player.vel, player.vel, groundNormal, -normalVelocity );
+        }
+
       }
         
         vec2.scaleAndAdd( player.pos, player.pos, player.vel, dt );
