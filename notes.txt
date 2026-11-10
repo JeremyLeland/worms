@@ -1,3 +1,34 @@
+11/10:
+  - Let's not get too carried away here. Just do the simplest thing first.
+  - Keep all the walking and hitting stuff the same
+  - If they're on ground but on too steep a slope, automatically move them as if they were walking
+    - It's not "physically accurate" by any means, but it'll get them off the slope
+      - Maybe have a faster "slide speed" to use until they hit shallower ground
+  - There's probably a grand reworking of everything that could happen, but we don't really need to model bouncing yet
+    - Bullets hit and immediately burst (for now)
+    - Shells hit and fall, and that seemed to look fine with what we were doing
+    - Player does their own movement. I just didn't want to let them stop on steep slopes.
+      - So nudge them along automatically if it's too steep.
+
+  - Except that we kind of do want to bounce, like if we jump into a ceiling
+    - Right now, we awkardly stick for a bit? Maybe it's just us dropping to zero.
+      - Also going to be all kinds of issues with narrow spaces
+        - Man, this movement is a pain in the ass to get right
+
+  - Playing with rolling
+    - Adding gravity to velocity based on slope
+    - If we're on flat ground, there's no adding to happen
+      - Need to handle this better
+
+
+11/9:
+  - Trying to have something where I slide around the level without player movement
+  - Will eventually switch this to player control if we're at a slope we can handle
+  - Should I treat collisions with walls like this, too?
+    - Need to know the closest point of interaction, then
+    - Can we use the search for nearby points from above?
+      - Run physics until we hit something, then run the nearby points check to see if we walk/slide?
+
 11/7:
   - If slope is in walk range, just do walking
   - If slope is outside walk range, apply gravity

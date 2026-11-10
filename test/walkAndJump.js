@@ -22,9 +22,9 @@ MaskMap.setTerrainCircle( map, 30, 30, 30, 0 );
 MaskMap.setTerrainCircle( map, 80, 40, 60, 0 );
 MaskMap.setTerrainCircle( map, 120, 60, 30, 0 );
 
-MaskMap.setTerrainCircle( map, 50, 40, 10, 1 );
-MaskMap.setTerrainCircle( map, 70, 50, 20, 1 );
-MaskMap.setTerrainCircle( map, 100, 40, 10, 1 );
+MaskMap.setTerrainCircle( map, 40, 40, 10, 1 );
+MaskMap.setTerrainCircle( map, 74, 50, 30, 1 );
+MaskMap.setTerrainCircle( map, 100, 45, 20, 1 );
 
 let player = {
   type: 'player',
@@ -46,7 +46,7 @@ let debugInfo;
 
 const Gravity = 0.0005;
 const PlayerMoveSpeed = 0.03;
-const PlayerJumpSpeed = 0.1;
+const PlayerJumpSpeed = 0.2; //0.1;
 const PlayerRopeNudgeSpeed = 0.001;
 const PlayerRopeLengthSpeed = 0.075;
 
@@ -196,6 +196,7 @@ gameCanvas.update = ( dt ) => {
 
         // Left/Right wall
         if ( bestHit.line[ 0 ] === bestHit.line[ 2 ] ) {
+          console.log( 'Hit left/right, stopping x movement' );
           player.vel[ 0 ] = 0;
         }
 

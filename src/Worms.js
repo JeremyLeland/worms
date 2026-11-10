@@ -1,3 +1,4 @@
+import * as MaskMap from '../src/MaskMap.js';
 import * as Collisions from '../src/common/Collisions.js';
 import * as Util from '../src/common/Util.js';
 
@@ -45,6 +46,62 @@ function drawRope( ctx, from, to ) {
   // Util.drawLinePixel( ctx, from, to );
 }
 
+export function getTouch( map, entity, touchDist, debugCtx ) {
+  const closest = {
+    dist: touchDist,
+  };
+
+  const minX = entity.pos[ 0 ] - entity.radius;
+  const minY = entity.pos[ 1 ] - entity.radius;
+  const maxX = entity.pos[ 0 ] + entity.radius;
+  const maxY = entity.pos[ 1 ] + entity.radius;
+  
+  const testLeft = Math.floor( minX - touchDist );
+  const testTop  = Math.floor( minY - touchDist );
+  const testRight = Math.floor( maxX + touchDist );
+  const testBottom = Math.floor( maxY + touchDist );
+  
+  for ( let testRow = testTop; testRow <= testBottom; testRow ++ ) {
+    for ( let testCol = testLeft; testCol <= testRight; testCol ++ ) {
+      
+      if ( MaskMap.getTerrain( map, testCol, testRow ) ) {
+        
+        // TODO: Make this a constant array of lines with offsets, and add testCol/testRow in below?
+        const lines = [
+          [ testCol, testRow + 1, testCol, testRow ],         // left
+          [ testCol, testRow, testCol + 1, testRow ],         // top
+          [ testCol + 1, testRow, testCol + 1, testRow + 1 ], // right
+          [ testCol + 1, testRow + 1, testCol, testRow + 1 ], // bottom
+        ];
+
+        lines.forEach( line => {
+          
+          const [ x, y ] = entity.pos;
+          const [ x1, y1, x2, y2 ] = line;
+
+          const px = x2 - x1;
+          const py = y2 - y1;
+          const D = ( px * px ) + ( py * py );
+
+          const t = D === 0 ? 0 : Math.max( 0, Math.min( 1, ( ( x - x1 ) * px + ( y - y1 ) * py ) / D ) );
+
+          const closestX = x1 + t * px;
+          const closestY = y1 + t * py;
+
+          const dist = Math.hypot( x - closestX, y - closestY ) - entity.radius;
+
+          if ( dist < closest.dist ) {
+            closest.dist = dist;
+            closest.pos = [ closestX, closestY ];
+          }
+        } );
+      }
+    }
+  }
+
+  return closest;
+}
+
 export function getHit( map, entity, dt, debugCtx ) {
   // console.log( ' getHit' );
 
@@ -89,6 +146,7 @@ export function getHit( map, entity, dt, debugCtx ) {
         const [ dx, dy ] = entity.vel;
         const r = entity.radius;
 
+        // TODO: Make this a constant array of lines with offsets, and add testCol/testRow in below?
         const lines = [
           [ testCol, testRow + 1, testCol, testRow ],         // left
           [ testCol, testRow, testCol + 1, testRow ],         // top
