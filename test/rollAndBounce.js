@@ -129,11 +129,11 @@ gameCanvas.draw = ( ctx ) => {
     vec2.normalize( groundNormal, groundNormal );
 
     const slope = Math.atan2( groundNormal[ 0 ], -groundNormal[ 1 ] );
-    const onGround = Math.abs( slope ) < Math.PI / 2;
+    // const onGround = Math.abs( slope ) < Math.PI / 2;
     
     // TODO: Back out of any overlap, or snap if we're on ground
     // if ( closest.dist < 0 || onGround ) {
-      vec2.scaleAndAdd( player.pos, closest.pos, groundNormal, player.radius );
+      // vec2.scaleAndAdd( player.pos, closest.pos, groundNormal, player.radius );
       
       ctx.fillStyle = '#fa08';
       Util.drawPoint( ctx, player.pos, player.radius );
@@ -141,57 +141,45 @@ gameCanvas.draw = ( ctx ) => {
       const tangentDir = Math.sign( groundNormal[ 0 ] );
       
       ctx.lineWidth = 0.2;
-      if ( tangentDir !== 0 ) {
 
-        const groundTangent = [ -tangentDir * groundNormal[ 1 ], tangentDir * groundNormal[ 0 ] ];
+      const groundTangent = [ -tangentDir * groundNormal[ 1 ], tangentDir * groundNormal[ 0 ] ];
 
-        ctx.strokeStyle = 'cyan';
-        Util.drawLine( ctx, closest.pos, vec2.scaleAndAdd( [], closest.pos, groundTangent, dt ) );
-        
-        const gravityAlongSlope = vec2.dot( GravityVec, groundTangent );
-        console.log( gravityAlongSlope );
+      ctx.strokeStyle = 'cyan';
+      Util.drawLine( ctx, closest.pos, vec2.scaleAndAdd( [], closest.pos, groundTangent, dt ) );
+      
+      const gravityAlongSlope = vec2.dot( GravityVec, groundTangent );
+      
+      const acceleration = gravityAlongSlope * ( 5 / 7 );   // "for a solid sphere rolling without slipping"
+      
+      ctx.strokeStyle = 'orange';
+      Util.drawLine( ctx, closest.pos, vec2.scaleAndAdd( [], closest.pos, player.vel, 1000 ) );
+      
+      vec2.scaleAndAdd( player.vel, player.vel, groundTangent, acceleration * dt );
 
-        const acceleration = gravityAlongSlope * ( 5 / 7 );   // "for a solid sphere rolling without slipping"
-        
-        console.log( 'old vel', player.vel );
-        ctx.strokeStyle = 'orange';
-        Util.drawLine( ctx, closest.pos, vec2.scaleAndAdd( [], closest.pos, player.vel, 1000 ) );
-        
-        vec2.scaleAndAdd( player.vel, player.vel, groundTangent, acceleration * dt );
+      // Try to keep us out of the ground??
+      const normalVelocity = vec2.dot( player.vel, groundNormal );
 
-        // Try to keep us out of the ground??
-        const normalVelocity = vec2.dot( player.vel, groundNormal );
-
-        if ( normalVelocity < 0 ) {
-          vec2.scaleAndAdd( player.vel, player.vel, groundNormal, -normalVelocity );
-        }
-
+      if ( normalVelocity < 0 ) {
+        vec2.scaleAndAdd( player.vel, player.vel, groundNormal, -normalVelocity );
       }
         
-        vec2.scaleAndAdd( player.pos, player.pos, player.vel, dt );
+      vec2.scaleAndAdd( player.pos, player.pos, player.vel, dt );
+      
+      ctx.fillStyle = '#ff08';
+      Util.drawPoint( ctx, player.pos, player.radius );
+
+      // Do another snap to the new closest ground (so we're touching ground at the end of each frame)
+      const newClosest = Worms.getTouch( map, player, GroundSnapDist );
+
+      if ( newClosest.pos ) {
+        const newGroundNormal = vec2.sub( [], player.pos, newClosest.pos );
+        vec2.normalize( newGroundNormal, newGroundNormal );
         
-        ctx.fillStyle = '#ff08';
+        vec2.scaleAndAdd( player.pos, newClosest.pos, newGroundNormal, player.radius );
+        
+        ctx.fillStyle = '#fff';
         Util.drawPoint( ctx, player.pos, player.radius );
-
-    // }
-
-    // if ( onGround ) { 
-    //   const moveDir = player.isMovingLeft ? -1 : player.isMovingRight ? 1 : 0;
-      
-    //   // Move along slope
-    //   // Make sure we can always go down a slope, just not up
-    //   if ( -moveDir * slope < MoveMaxSlope ) {
-    //     const moveVec = [ -moveDir * norm[ 1 ], moveDir * norm[ 0 ] ];
-        
-    //     vec2.scaleAndAdd( player.pos, player.pos, moveVec, PlayerMoveSpeed * dt );
-    //     vec2.set( player.vel, 0, 0 );
-    //   }
-      
-    //   if ( player.isJumping ) {
-    //     vec2.set( player.vel, 0, -PlayerJumpSpeed );
-    //   }
-    // }
-    
+      }
   }
   // else {
   //   let timeLeft = dt;
