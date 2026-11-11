@@ -19,7 +19,10 @@
     - Adding gravity to velocity based on slope
     - If we're on flat ground, there's no adding to happen
       - Need to handle this better
+    - Removing the component of the velocity that goes into the groundNormal seems to solve all our problems
 
+  - Try to use a loop to avoid copying the snap code
+    
 
 11/9:
   - Trying to have something where I slide around the level without player movement

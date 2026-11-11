@@ -116,71 +116,55 @@ gameCanvas.draw = ( ctx ) => {
   //
   // Rolling
   //
-  const closest = Worms.getTouch( map, player, GroundSnapDist );
+  let timeLeft = dt;
 
-  // Don't snap back if we're trying to jump
-  // TODO: Some sort of speed limit before sticking/rolling
-  // if ( vec2.length( player.vel ) < PlayerJumpSpeed / 2 ) {
-  // }
+  for ( let step = 0; step < 2; step ++ ) {
+    const closest = Worms.getTouch( map, player, GroundSnapDist );
 
-  if ( closest.pos ) {
-    // Snap to ground
-    const groundNormal = vec2.sub( [], player.pos, closest.pos );
-    vec2.normalize( groundNormal, groundNormal );
+    if ( closest.pos ) {
+      // Snap to ground
+      const groundNormal = vec2.sub( [], player.pos, closest.pos );
+      vec2.normalize( groundNormal, groundNormal );
 
-    const slope = Math.atan2( groundNormal[ 0 ], -groundNormal[ 1 ] );
-    // const onGround = Math.abs( slope ) < Math.PI / 2;
-    
-    // TODO: Back out of any overlap, or snap if we're on ground
-    // if ( closest.dist < 0 || onGround ) {
-      // vec2.scaleAndAdd( player.pos, closest.pos, groundNormal, player.radius );
-      
-      ctx.fillStyle = '#fa08';
-      Util.drawPoint( ctx, player.pos, player.radius );
-      
-      const tangentDir = Math.sign( groundNormal[ 0 ] );
-      
-      ctx.lineWidth = 0.2;
-
-      const groundTangent = [ -tangentDir * groundNormal[ 1 ], tangentDir * groundNormal[ 0 ] ];
-
-      ctx.strokeStyle = 'cyan';
-      Util.drawLine( ctx, closest.pos, vec2.scaleAndAdd( [], closest.pos, groundTangent, dt ) );
-      
-      const gravityAlongSlope = vec2.dot( GravityVec, groundTangent );
-      
-      const acceleration = gravityAlongSlope * ( 5 / 7 );   // "for a solid sphere rolling without slipping"
-      
-      ctx.strokeStyle = 'orange';
-      Util.drawLine( ctx, closest.pos, vec2.scaleAndAdd( [], closest.pos, player.vel, 1000 ) );
-      
-      vec2.scaleAndAdd( player.vel, player.vel, groundTangent, acceleration * dt );
-
-      // Try to keep us out of the ground??
       const normalVelocity = vec2.dot( player.vel, groundNormal );
+      if ( normalVelocity <= 0.1 ) {
+        vec2.scaleAndAdd( player.pos, closest.pos, groundNormal, player.radius );
 
-      if ( normalVelocity < 0 ) {
-        vec2.scaleAndAdd( player.vel, player.vel, groundNormal, -normalVelocity );
+        if ( normalVelocity < 0 ) {
+          vec2.scaleAndAdd( player.vel, player.vel, groundNormal, -normalVelocity );
+        }
+
+        if ( timeLeft <= 0 ) {
+          break;
+        }
+
+        const tangentDir = Math.sign( groundNormal[ 0 ] );  
+        const groundTangent = [ -tangentDir * groundNormal[ 1 ], tangentDir * groundNormal[ 0 ] ];
+
+        ctx.lineWidth = 0.2;
+        ctx.strokeStyle = 'cyan';
+        Util.drawLine( ctx, closest.pos, vec2.scaleAndAdd( [], closest.pos, groundTangent, timeLeft ) );
+
+        const gravityAlongSlope = vec2.dot( GravityVec, groundTangent );
+        const acceleration = gravityAlongSlope * ( 5 / 7 );   // "for a solid sphere rolling without slipping"
+
+        ctx.strokeStyle = 'orange';
+        Util.drawLine( ctx, closest.pos, vec2.scaleAndAdd( [], closest.pos, player.vel, 1000 ) );
+
+        // const slope = Math.atan2( groundNormal[ 0 ], -groundNormal[ 1 ] );
+        // const onGround = Math.abs( slope ) < Math.PI / 2;
+
+        vec2.scaleAndAdd( player.vel, player.vel, groundTangent, acceleration * timeLeft );
+        vec2.scaleAndAdd( player.pos, player.pos, player.vel, timeLeft );
       }
-        
-      vec2.scaleAndAdd( player.pos, player.pos, player.vel, dt );
-      
-      ctx.fillStyle = '#ff08';
-      Util.drawPoint( ctx, player.pos, player.radius );
 
-      // Do another snap to the new closest ground (so we're touching ground at the end of each frame)
-      const newClosest = Worms.getTouch( map, player, GroundSnapDist );
-
-      if ( newClosest.pos ) {
-        const newGroundNormal = vec2.sub( [], player.pos, newClosest.pos );
-        vec2.normalize( newGroundNormal, newGroundNormal );
-        
-        vec2.scaleAndAdd( player.pos, newClosest.pos, newGroundNormal, player.radius );
-        
-        ctx.fillStyle = '#fff';
-        Util.drawPoint( ctx, player.pos, player.radius );
-      }
+      timeLeft -= dt;
+    }
   }
+
+  ctx.fillStyle = '#fff';
+  Util.drawPoint( ctx, player.pos, player.radius );
+
   // else {
   //   let timeLeft = dt;
   
