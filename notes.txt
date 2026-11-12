@@ -7,6 +7,22 @@
   - NEXT: Fall as well as roll
   - THEN: Jumping, walking if shallow enough slope
 
+  - Managed to get something much simpler that seems to work well
+    - Just apply gravity and take out the groundNormal component
+    - Did one loop instead of two, seems like it's always touching ground
+    - Simplified so we only snap if we're headed into wall
+    - Doesn't account for walking yet and doesn't do any sweep testing
+
+  - Future thought
+    - Would some sort of edge detection be useful?
+    - Turn the grid into line edges
+    - Then we'd know the actual normal of where we are
+    - Might be smoother for drawing and for player movement
+
+  DONE: Walking and jumping
+    - We even bounce off walls and ceilings with jumps
+
+
 11/10:
   - Let's not get too carried away here. Just do the simplest thing first.
   - Keep all the walking and hitting stuff the same

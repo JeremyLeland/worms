@@ -47,11 +47,11 @@ let debugInfo;
 
 const Gravity = 0.0005;
 const PlayerMoveSpeed = 0.03;
-const PlayerJumpSpeed = 0.2; //0.1;
+const PlayerJumpSpeed = 0.1;
 const PlayerRopeNudgeSpeed = 0.001;
 const PlayerRopeLengthSpeed = 0.075;
 
-const MoveMaxSlope = 1.3;
+const MoveMaxSlope = 1;
 const GroundSnapDist = 1;
 
 const BulletSpeed = 0.5;
@@ -129,6 +129,19 @@ gameCanvas.update = ( dt ) => {
     if ( normalVelocity < 0 ) {
       vec2.scaleAndAdd( player.pos, closest.pos, groundNormal, player.radius );
       vec2.scaleAndAdd( player.vel, player.vel, groundNormal, -normalVelocity );
+    }
+    
+    const slope = Math.atan2( groundNormal[ 0 ], -groundNormal[ 1 ] );
+
+    if ( Math.abs( slope ) < MoveMaxSlope ) {
+      const moveDir = player.isMovingLeft ? -1 : player.isMovingRight ? 1 : 0;
+    
+      const moveVec = [ -moveDir * groundNormal[ 1 ], moveDir * groundNormal[ 0 ] ];
+      vec2.scale( player.vel, moveVec, PlayerMoveSpeed );
+
+      if ( player.isJumping ) {
+        player.vel[ 1 ] = -PlayerJumpSpeed;
+      }
     }
 
     // ctx.strokeStyle = 'orange';
