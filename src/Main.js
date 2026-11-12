@@ -24,7 +24,7 @@ MaskMap.setTerrainCircle( map, 100, 45, 20, 1 );
 let player = {
   type: 'player',
   id: 'player1',
-  pos: [ 100, 96 ],
+  pos: [ 135, 50 ],
   vel: [ 0, 0 ],
   // rope: {
   //   pos: [ 200, 10 ],
@@ -98,66 +98,80 @@ gameCanvas.update = ( dt ) => {
     //
     // Rolling
     //
-    const touch = Worms.getTouch( map, entity, GroundSnapDist );
+    // const touch = Worms.getTouch( map, entity, GroundSnapDist );
   
-    // TODO: Need to handle case where side wall and floor are equal distance
-    //       this can happen with small radius or large square corner
-    //       Entity will sometimes fall through floor if side wall is detected as touch point
+    // // TODO: Need to handle case where side wall and floor are equal distance
+    // //       this can happen with small radius or large square corner
+    // //       Entity will sometimes fall through floor if side wall is detected as touch point
 
-    if ( touch.pos ) {
-      // Snap to ground
-      const groundNormal = vec2.sub( [], entity.pos, touch.pos );
-      vec2.normalize( groundNormal, groundNormal );
+    // if ( touch.pos ) {
+    //   // Snap to ground
+    //   const groundNormal = vec2.sub( [], entity.pos, touch.pos );
+    //   vec2.normalize( groundNormal, groundNormal );
   
-      const normalVelocity = vec2.dot( entity.vel, groundNormal );
+    //   const normalVelocity = vec2.dot( entity.vel, groundNormal );
         
-      if ( normalVelocity < 0 ) {
-        vec2.scaleAndAdd( entity.pos, touch.pos, groundNormal, entity.radius );
-        vec2.scaleAndAdd( entity.vel, entity.vel, groundNormal, -normalVelocity );
-      }
+    //   if ( normalVelocity < 0 ) {
+    //     vec2.scaleAndAdd( entity.pos, touch.pos, groundNormal, entity.radius );
+    //     vec2.scaleAndAdd( entity.vel, entity.vel, groundNormal, -normalVelocity );
+    //   }
   
-      //
-      // Players can walk on ground instead of roll
-      //
-      if ( entity.type === 'player' ) {
-        const slope = Math.atan2( groundNormal[ 0 ], -groundNormal[ 1 ] );
+    //   //
+    //   // Players can walk on ground instead of roll
+    //   //
+    //   if ( entity.type === 'player' ) {
+    //     const slope = Math.atan2( groundNormal[ 0 ], -groundNormal[ 1 ] );
         
-        if ( Math.abs( slope ) < MoveMaxSlope ) {
-          const moveDir = entity.isMovingLeft ? -1 : entity.isMovingRight ? 1 : 0;
+    //     if ( Math.abs( slope ) < MoveMaxSlope ) {
+    //       const moveDir = entity.isMovingLeft ? -1 : entity.isMovingRight ? 1 : 0;
           
-          const moveVec = [ -moveDir * groundNormal[ 1 ], moveDir * groundNormal[ 0 ] ];
-          vec2.scale( entity.vel, moveVec, PlayerMoveSpeed );
+    //       const moveVec = [ -moveDir * groundNormal[ 1 ], moveDir * groundNormal[ 0 ] ];
+    //       vec2.scale( entity.vel, moveVec, PlayerMoveSpeed );
           
-          if ( entity.isJumping ) {
-            entity.vel[ 1 ] = -PlayerJumpSpeed;
-          }
-        }
-      }
+    //       if ( entity.isJumping ) {
+    //         entity.vel[ 1 ] = -PlayerJumpSpeed;
+    //       }
+    //     }
+    //   }
 
-      // Collision response for other entities
-      if ( entity.type === 'bullet' ) {
-        entity.health = 0;
-        MaskMap.setTerrainCircle( map, entity.pos[ 0 ], entity.pos[ 1 ], entity.radius * 4, Terrain.Empty );
-      }
+    //   // TODO: Should I check for bullets here too?
 
-      vec2.scaleAndAdd( entity.pos, entity.pos, entity.vel, dt );
-    }
-    else {
+    //   vec2.scaleAndAdd( entity.pos, entity.pos, entity.vel, dt );
+    // }
+    // else {
 
       let timeLeft = dt;
 
-      const bestHit = Worms.getHit( map, entity, timeLeft );
+      const hit = Worms.getHit( map, entity, timeLeft );
 
-      // console.log( entity, bestHit );
+      console.log( entity, hit );
 
-      if ( /*0 < bestHit.time &&*/ bestHit.time < timeLeft ) {
-        vec2.scaleAndAdd( entity.pos, entity.pos, entity.vel, bestHit.time );
-        timeLeft -= bestHit.time;
+      if ( /*0 < bestHit.time &&*/ hit.time < timeLeft ) {
+        vec2.scaleAndAdd( entity.pos, entity.pos, entity.vel, hit.time );
+        timeLeft -= hit.time;
+
+        const groundNormal = vec2.sub( [], entity.pos, hit.pos );
+        vec2.normalize( groundNormal, groundNormal );
+    
+        const normalVelocity = vec2.dot( entity.vel, groundNormal );
+          
+        if ( normalVelocity < 0 ) {
+          vec2.scaleAndAdd( entity.pos, hit.pos, groundNormal, entity.radius );
+          vec2.scaleAndAdd( entity.vel, entity.vel, groundNormal, -normalVelocity );
+        }
+
+        // Collision response for other entities
+        if ( entity.type === 'bullet' ) {
+          entity.health = 0;
+
+          // TODO: Should these changes be made outside the update?
+          MaskMap.setTerrainCircle( map, entity.pos[ 0 ], entity.pos[ 1 ], entity.radius * 4, Terrain.Empty );
+        }
       }
-      else {
-        vec2.scaleAndAdd( entity.pos, entity.pos, entity.vel, timeLeft );
-      }
-    }
+      
+      vec2.scaleAndAdd( entity.pos, entity.pos, entity.vel, timeLeft );
+      
+    // }
     
 
     // // TODO: At some point, this will be dependent on us detecting that we are on the ground and in walking mode
@@ -431,7 +445,12 @@ keyInput.Actions = {
 
 document.addEventListener( 'pointerdown', e => {
   player.isShooting = e.buttons & 1;
-  player.isShootingRope = e.buttons & 2;
+  // player.isShootingRope = e.buttons & 2;
+
+  if ( e.buttons === 2 ) {
+    vec2.set( player.pos, gameCanvas.getX( e.x ), gameCanvas.getY( e.y ) );
+    vec2.set( player.vel, 0, 0 );
+  }
 } );
 
 document.addEventListener( 'pointerup', e => {

@@ -156,21 +156,21 @@ export function getHit( map, entity, dt, debugCtx ) {
         ];
 
         lines.forEach( line => {
-          const hitTime = Collisions.timeToCircleHitLine( x, y, dx, dy, r, ...line );
+          const hit = Collisions.timeToCircleHitLine( x, y, dx, dy, r, ...line );
 
           // if ( hitTime < Infinity ) {
           //   console.log( '  hitTime for ', line, ' is ', hitTime );
           // }
 
           // Make sure hitTime is within our update window, helps avoid other weirdness
-          if ( hitTime < bestHit.time && hitTime < dt ) {
-            bestHit.time = hitTime;
+          if ( hit.time < bestHit.time && hit.time < dt ) {
+            bestHit = hit;
             bestHit.line = line;
           }
 
           if ( debugCtx ) {
-            if ( hitTime < Infinity ) {
-              const val = ( 1 - hitTime ) * 255;
+            if ( hit.time < Infinity ) {
+              const val = ( 1 - hit.time ) * 255;
 
               debugCtx.strokeStyle = `rgb( 128, ${ val }, 255 )`;
               debugCtx.lineWidth = 0.1;

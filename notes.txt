@@ -16,6 +16,22 @@
       - Then it detects overlap below on next frame, and corrects
       - Wasn't happening before because radius was larger than 1
         - easy fix is don't let anything have radius of 1 :-P
+        - But this could also happen at corner of map if it's a larger square
+      - Hack: run it twice to get both before draw happens?
+
+  - It's still awkward having the touch vs the sweep
+    - NEXT: Try adding hit pos to the sweep result to see if I can use that for to fix my velocity like touch
+      - Need to be clear on which position we are talking about
+        - I think it should be on the line
+
+    - Added pos to sweep result, validated with test
+    - Trying to use for game
+      - Seems to work for falling down a slope, but once we are moving horizontally along floor, it's picking up the wrong hit
+      - This is why we had that special casing before
+        - Is there something less hacky I can use? The one I have broke some other basic cases (moving diagonally)
+          - Diagonal case was pos: [ 20, 20 ] vel: [ 30, 30 ] on our test map (it missed a corner directly in front of it)
+        - We need a "moving away from" concept like the vDotN, but taking into account the endpoint instead of the entire line
+
 
 11/11:
   - Can I apply gravity vector at the beginning of every update, then take away based on normal?
