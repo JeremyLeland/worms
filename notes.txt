@@ -1,3 +1,12 @@
+11/11:
+  - Can I apply gravity vector at the beginning of every update, then take away based on normal?
+    - Instead of applying gravity in the direction of slope?
+    - Does this do the same thing?
+      - Might be cleaner than having different paths for roll and fall
+
+  - NEXT: Fall as well as roll
+  - THEN: Jumping, walking if shallow enough slope
+
 11/10:
   - Let's not get too carried away here. Just do the simplest thing first.
   - Keep all the walking and hitting stuff the same

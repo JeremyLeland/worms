@@ -111,6 +111,8 @@ gameCanvas.draw = ( ctx ) => {
   //
   const GravityVec = vec2.fromValues( 0, Gravity );
 
+  vec2.scaleAndAdd( player.vel, player.vel, GravityVec, dt )
+
   // vec2.scaleAndAdd( player.vel, player.vel, forces, dt );
   
   //
@@ -127,6 +129,9 @@ gameCanvas.draw = ( ctx ) => {
       vec2.normalize( groundNormal, groundNormal );
 
       const normalVelocity = vec2.dot( player.vel, groundNormal );
+
+      console.log( 'normalVelocity', normalVelocity );
+
       if ( normalVelocity <= 0.1 ) {
         vec2.scaleAndAdd( player.pos, closest.pos, groundNormal, player.radius );
 
@@ -138,15 +143,15 @@ gameCanvas.draw = ( ctx ) => {
           break;
         }
 
-        const tangentDir = Math.sign( groundNormal[ 0 ] );  
-        const groundTangent = [ -tangentDir * groundNormal[ 1 ], tangentDir * groundNormal[ 0 ] ];
+        // const tangentDir = Math.sign( groundNormal[ 0 ] );  
+        // const groundTangent = [ -tangentDir * groundNormal[ 1 ], tangentDir * groundNormal[ 0 ] ];
 
-        ctx.lineWidth = 0.2;
-        ctx.strokeStyle = 'cyan';
-        Util.drawLine( ctx, closest.pos, vec2.scaleAndAdd( [], closest.pos, groundTangent, timeLeft ) );
+        // ctx.lineWidth = 0.2;
+        // ctx.strokeStyle = 'cyan';
+        // Util.drawLine( ctx, closest.pos, vec2.scaleAndAdd( [], closest.pos, groundTangent, timeLeft ) );
 
-        const gravityAlongSlope = vec2.dot( GravityVec, groundTangent );
-        const acceleration = gravityAlongSlope * ( 5 / 7 );   // "for a solid sphere rolling without slipping"
+        // const gravityAlongSlope = vec2.dot( GravityVec, groundTangent );
+        // const acceleration = gravityAlongSlope * ( 5 / 7 );   // "for a solid sphere rolling without slipping"
 
         ctx.strokeStyle = 'orange';
         Util.drawLine( ctx, closest.pos, vec2.scaleAndAdd( [], closest.pos, player.vel, 1000 ) );
@@ -154,11 +159,14 @@ gameCanvas.draw = ( ctx ) => {
         // const slope = Math.atan2( groundNormal[ 0 ], -groundNormal[ 1 ] );
         // const onGround = Math.abs( slope ) < Math.PI / 2;
 
-        vec2.scaleAndAdd( player.vel, player.vel, groundTangent, acceleration * timeLeft );
+        // vec2.scaleAndAdd( player.vel, player.vel, groundTangent, acceleration * timeLeft );
         vec2.scaleAndAdd( player.pos, player.pos, player.vel, timeLeft );
       }
 
       timeLeft -= dt;
+    }
+    else {
+      vec2.scaleAndAdd( player.pos, player.pos, player.vel, timeLeft );
     }
   }
 
