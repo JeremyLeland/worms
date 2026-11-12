@@ -22,6 +22,7 @@ export function drawEntities( ctx, entities ) {
       ctx.save(); {
         ctx.translate( ...entity.pos );
         ctx.rotate( entity.rot );
+        ctx.scale( entity.radius, entity.radius );
 
         ctx.fillStyle = 'tan';
         ctx.fillRect( -1, -0.5, 2, 1 );

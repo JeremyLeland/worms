@@ -1,3 +1,22 @@
+11/12:
+  - Integrate roll and bounce test into main game
+    - Shoot bullets to change map
+      - Will need sweep test back in
+    - Ninja rope
+
+  - Maybe do a sweep, see where we end up, then do a touch test?
+    - seems to work with player of larger radius
+    - smaller radius things jitter a lot then fall through the floor
+    - maybe we should check touch first, then only sweep if not touching
+
+  - Figured out why shells are jittering
+    - Shell is at an inner corner
+    - It is alternatingly being detected as touching the left side vs touching the bottom
+    - When it is touching left side, it is allowed to fall
+      - Then it detects overlap below on next frame, and corrects
+      - Wasn't happening before because radius was larger than 1
+        - easy fix is don't let anything have radius of 1 :-P
+
 11/11:
   - Can I apply gravity vector at the beginning of every update, then take away based on normal?
     - Instead of applying gravity in the direction of slope?
