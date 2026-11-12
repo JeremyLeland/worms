@@ -97,11 +97,10 @@ gameCanvas.draw = ( ctx ) => {
   ctx.fillStyle = '#fff8';
   Util.drawPoint( ctx, player.pos, player.radius );
 
-// }
+}
 
-
-  // gameCanvas.update = ( dt ) => {
-  const dt = 10;
+gameCanvas.update = ( dt ) => {
+  // const dt = 10;
 
   // const moveDir = player.isMovingLeft ? -1 : player.isMovingRight ? 1 : 0;
   // player.vel[ 0 ] = moveDir * PlayerMoveSpeed;
@@ -109,69 +108,38 @@ gameCanvas.draw = ( ctx ) => {
   //
   // Forces
   //
-  const GravityVec = vec2.fromValues( 0, Gravity );
+  const forces = vec2.fromValues( 0, Gravity );
 
-  vec2.scaleAndAdd( player.vel, player.vel, GravityVec, dt )
-
-  // vec2.scaleAndAdd( player.vel, player.vel, forces, dt );
+  vec2.scaleAndAdd( player.vel, player.vel, forces, dt )
   
   //
   // Rolling
   //
-  let timeLeft = dt;
+  const closest = Worms.getTouch( map, player, GroundSnapDist );
 
-  for ( let step = 0; step < 2; step ++ ) {
-    const closest = Worms.getTouch( map, player, GroundSnapDist );
+  if ( closest.pos ) {
+    // Snap to ground
+    const groundNormal = vec2.sub( [], player.pos, closest.pos );
+    vec2.normalize( groundNormal, groundNormal );
 
-    if ( closest.pos ) {
-      // Snap to ground
-      const groundNormal = vec2.sub( [], player.pos, closest.pos );
-      vec2.normalize( groundNormal, groundNormal );
+    const normalVelocity = vec2.dot( player.vel, groundNormal );
 
-      const normalVelocity = vec2.dot( player.vel, groundNormal );
-
-      console.log( 'normalVelocity', normalVelocity );
-
-      if ( normalVelocity <= 0.1 ) {
-        vec2.scaleAndAdd( player.pos, closest.pos, groundNormal, player.radius );
-
-        if ( normalVelocity < 0 ) {
-          vec2.scaleAndAdd( player.vel, player.vel, groundNormal, -normalVelocity );
-        }
-
-        if ( timeLeft <= 0 ) {
-          break;
-        }
-
-        // const tangentDir = Math.sign( groundNormal[ 0 ] );  
-        // const groundTangent = [ -tangentDir * groundNormal[ 1 ], tangentDir * groundNormal[ 0 ] ];
-
-        // ctx.lineWidth = 0.2;
-        // ctx.strokeStyle = 'cyan';
-        // Util.drawLine( ctx, closest.pos, vec2.scaleAndAdd( [], closest.pos, groundTangent, timeLeft ) );
-
-        // const gravityAlongSlope = vec2.dot( GravityVec, groundTangent );
-        // const acceleration = gravityAlongSlope * ( 5 / 7 );   // "for a solid sphere rolling without slipping"
-
-        ctx.strokeStyle = 'orange';
-        Util.drawLine( ctx, closest.pos, vec2.scaleAndAdd( [], closest.pos, player.vel, 1000 ) );
-
-        // const slope = Math.atan2( groundNormal[ 0 ], -groundNormal[ 1 ] );
-        // const onGround = Math.abs( slope ) < Math.PI / 2;
-
-        // vec2.scaleAndAdd( player.vel, player.vel, groundTangent, acceleration * timeLeft );
-        vec2.scaleAndAdd( player.pos, player.pos, player.vel, timeLeft );
-      }
-
-      timeLeft -= dt;
+    // console.log( 'normalVelocity', normalVelocity );
+      
+    if ( normalVelocity < 0 ) {
+      vec2.scaleAndAdd( player.pos, closest.pos, groundNormal, player.radius );
+      vec2.scaleAndAdd( player.vel, player.vel, groundNormal, -normalVelocity );
     }
-    else {
-      vec2.scaleAndAdd( player.pos, player.pos, player.vel, timeLeft );
-    }
+
+    // ctx.strokeStyle = 'orange';
+    // Util.drawLine( ctx, closest.pos, vec2.scaleAndAdd( [], closest.pos, player.vel, 1000 ) );
   }
+  
+  vec2.scaleAndAdd( player.pos, player.pos, player.vel, dt );
 
-  ctx.fillStyle = '#fff';
-  Util.drawPoint( ctx, player.pos, player.radius );
+
+  // ctx.fillStyle = '#fff';
+  // Util.drawPoint( ctx, player.pos, player.radius );
 
   // else {
   //   let timeLeft = dt;
@@ -249,4 +217,4 @@ function pointerInput( e ) {
 document.addEventListener( 'pointerdown', pointerInput );
 document.addEventListener( 'pointermove', pointerInput );
 
-// gameCanvas.start();
+gameCanvas.start();
