@@ -73,7 +73,7 @@ backgroundCtx.fillStyle = '#321';
 backgroundCtx.fillRect( 0, 0, map.cols, map.rows );
 
 const foregroundImage = new OffscreenCanvas( map.cols, map.rows );
-const foregroundCtx = foregroundImage.getContext( '2d' );
+const foregroundCtx = foregroundImage.getContext( '2d', { willReadFrequently: true } );
 foregroundCtx.fillStyle = 'rgb(200, 100, 20)';
 foregroundCtx.fillRect( 0, 0, map.cols, map.rows );
 
@@ -142,34 +142,37 @@ gameCanvas.update = ( dt ) => {
 
       let timeLeft = dt;
 
-      const hit = Worms.getHit( map, entity, timeLeft );
-
-      console.log( entity, hit );
-
-      if ( /*0 < bestHit.time &&*/ hit.time < timeLeft ) {
-        vec2.scaleAndAdd( entity.pos, entity.pos, entity.vel, hit.time );
-        timeLeft -= hit.time;
-
-        const groundNormal = vec2.sub( [], entity.pos, hit.pos );
-        vec2.normalize( groundNormal, groundNormal );
-    
-        const normalVelocity = vec2.dot( entity.vel, groundNormal );
+      for ( let step = 0; step < 2; step ++ ) {
+         
+        const hit = Worms.getHit( map, entity, timeLeft );
+        
+        if ( /*0 < bestHit.time &&*/ hit.time < timeLeft ) {
+          vec2.scaleAndAdd( entity.pos, entity.pos, entity.vel, hit.time );
+          timeLeft -= hit.time;
           
-        if ( normalVelocity < 0 ) {
-          vec2.scaleAndAdd( entity.pos, hit.pos, groundNormal, entity.radius );
-          vec2.scaleAndAdd( entity.vel, entity.vel, groundNormal, -normalVelocity );
+          const groundNormal = vec2.sub( [], entity.pos, hit.pos );
+          vec2.normalize( groundNormal, groundNormal );
+          
+          const normalVelocity = vec2.dot( entity.vel, groundNormal );
+          
+          if ( normalVelocity < 0 ) {
+            vec2.scaleAndAdd( entity.pos, hit.pos, groundNormal, entity.radius );
+            vec2.scaleAndAdd( entity.vel, entity.vel, groundNormal, -normalVelocity );
+          }
+          
+          // Collision response for other entities
+          if ( entity.type === 'bullet' ) {
+            entity.health = 0;
+            
+            // TODO: Should these changes be made outside the update?
+            MaskMap.setTerrainCircle( map, entity.pos[ 0 ], entity.pos[ 1 ], entity.radius * 4, Terrain.Empty );
+          }
         }
-
-        // Collision response for other entities
-        if ( entity.type === 'bullet' ) {
-          entity.health = 0;
-
-          // TODO: Should these changes be made outside the update?
-          MaskMap.setTerrainCircle( map, entity.pos[ 0 ], entity.pos[ 1 ], entity.radius * 4, Terrain.Empty );
+        else {
+          vec2.scaleAndAdd( entity.pos, entity.pos, entity.vel, timeLeft );
+          break;
         }
       }
-      
-      vec2.scaleAndAdd( entity.pos, entity.pos, entity.vel, timeLeft );
       
     // }
     
@@ -220,7 +223,7 @@ gameCanvas.update = ( dt ) => {
         vel: vec2.scaleAndAdd( [], entity.vel, casingVec, ( 0.75 + 0.5 * Math.random() ) * CasingSpeed ),
         rot: lineAngle + ( -0.5 + Math.random() ) * 1,
         rotVel: ( isFacingLeft ? 1 : -1 ) * ( 0.75 + 0.5 * Math.random() ) * CasingRotSpeed,
-        radius: 1.5,
+        radius: 1,
         health: 1,
       } );
     }
@@ -422,7 +425,7 @@ gameCanvas.draw = ( ctx ) => {
 
 
 
-const keyInput = new KeyInput();
+const keyInput = new KeyInput( /*() => { gameCanvas.update( 10 ); gameCanvas.redraw() }*/ );
 
 keyInput.Keys = {
   PlayerUp: 'w',

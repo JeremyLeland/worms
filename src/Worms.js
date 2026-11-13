@@ -130,7 +130,7 @@ export function getHit( map, entity, dt, debugCtx ) {
   for ( let testRow = testTop; testRow <= testBottom; testRow ++ ) {
     for ( let testCol = testLeft; testCol <= testRight; testCol ++ ) {
 
-      if ( map.data[ testCol + testRow * map.cols ] === 0 ) {
+      if ( MaskMap.getTerrain( map, testCol, testRow ) === 0 ) {
         if ( debugCtx ) {
           debugCtx.fillStyle = '#0f04';
           debugCtx.fillRect( testCol, testRow, 1, 1 );

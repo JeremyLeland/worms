@@ -32,6 +32,12 @@
           - Diagonal case was pos: [ 20, 20 ] vel: [ 30, 30 ] on our test map (it missed a corner directly in front of it)
         - We need a "moving away from" concept like the vDotN, but taking into account the endpoint instead of the entire line
 
+    - It's going through the wall
+      - It only does one test, which is detecting a hit at -0 on the flat ground
+        - It backs out of this, adjusts velocity, then runs the rest of it for the rest of the timeLeft
+      - Needs to do at least another test
+        - Make this part of a loop?
+
 
 11/11:
   - Can I apply gravity vector at the beginning of every update, then take away based on normal?
