@@ -159,6 +159,45 @@ gameCanvas.update = ( dt ) => {
             vec2.scaleAndAdd( entity.pos, hit.pos, groundNormal, entity.radius );
             vec2.scaleAndAdd( entity.vel, entity.vel, groundNormal, -normalVelocity );
           }
+
+          //
+          // Players can walk on ground instead of roll
+          //
+          if ( entity.type === 'player' ) {
+            const slope = Math.atan2( groundNormal[ 0 ], -groundNormal[ 1 ] );
+            
+            if ( Math.abs( slope ) < MoveMaxSlope ) {
+              const moveDir = entity.isMovingLeft ? -1 : entity.isMovingRight ? 1 : 0;
+              
+              const moveVec = [ -moveDir * groundNormal[ 1 ], moveDir * groundNormal[ 0 ] ];
+              vec2.scale( entity.vel, moveVec, PlayerMoveSpeed );
+
+              // Just go ahead and walk, then back us out of the ground
+              // Feels inelegant, but seems to work for now
+              vec2.scaleAndAdd( entity.pos, entity.pos, entity.vel, timeLeft );
+              timeLeft = 0;
+
+              const touch = Worms.getTouch( map, entity, GroundSnapDist );
+
+              if ( touch.pos ) {
+                // Snap to ground
+                const groundNormal = vec2.sub( [], entity.pos, touch.pos );
+                vec2.normalize( groundNormal, groundNormal );
+            
+                const normalVelocity = vec2.dot( entity.vel, groundNormal );
+                  
+                if ( normalVelocity < 0 ) {
+                  vec2.scaleAndAdd( entity.pos, touch.pos, groundNormal, entity.radius );
+                  vec2.scaleAndAdd( entity.vel, entity.vel, groundNormal, -normalVelocity );
+                }
+              }
+
+              
+              if ( entity.isJumping ) {
+                entity.vel[ 1 ] = -PlayerJumpSpeed;
+              }
+            }
+          }
           
           // Collision response for other entities
           if ( entity.type === 'bullet' ) {

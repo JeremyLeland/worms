@@ -38,6 +38,19 @@
       - Needs to do at least another test
         - Make this part of a loop?
 
+    - Can sort of walk with getHit
+      - The problem is if my walk vector is detected as an immediate hit
+
+    - It really is two different code paths
+      - getTouch works better for walking, especailly since we want to snap to where we are
+      - Maybe player just needs a separate movement step?
+        - getHit seems to work well enough for shells rolling down slopes
+        - It's just the walking that needs the extra control
+      - Walking us along the slope and snapping us out of the ground seems to work for now
+        - Feels inelegant, but looks good for the moment
+
+  - NEXT: Get ropes back in here!
+
 
 11/11:
   - Can I apply gravity vector at the beginning of every update, then take away based on normal?
