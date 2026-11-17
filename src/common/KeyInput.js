@@ -2,9 +2,13 @@ export class KeyInput {
   Keys;
   Actions;
 
-  constructor() {
+  #callback;
+
+  constructor( callback = () => {} ) {
     document.addEventListener( 'keydown', e => this.handleKeyInput( e, true  ) );
     document.addEventListener( 'keyup',   e => this.handleKeyInput( e, false ) );
+
+    this.#callback = callback;
   }
 
   handleKeyInput( e, isDown ) {
@@ -13,7 +17,10 @@ export class KeyInput {
         this.Actions[ action ]( isDown );
       }
     }
+
+    this.#callback();
   }
+
 }
 
 

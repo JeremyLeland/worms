@@ -13,15 +13,23 @@ const Terrain = {
 
 const map = MaskMap.create( 320, 240, Terrain.Dirt );
 
+MaskMap.setTerrainCircle( map, 30, 30, 30, 0 );
+MaskMap.setTerrainCircle( map, 80, 40, 60, 0 );
+MaskMap.setTerrainCircle( map, 120, 60, 30, 0 );
+
+// MaskMap.setTerrainCircle( map, 40, 40, 10, 1 );
+// MaskMap.setTerrainCircle( map, 74, 50, 30, 1 );
+// MaskMap.setTerrainCircle( map, 100, 45, 20, 1 );
+
 let player = {
   type: 'player',
   id: 'player1',
-  pos: [ 200, 40 ],
+  pos: [ 135, 50 ],
   vel: [ 0, 0 ],
-  // rope: {
-  //   pos: [ 200, 10 ],
-  //   length: 50,
-  // },
+  rope: {
+    pos: [ 100, 0 ],
+    length: 50,
+  },
   radius: 8,
   isMovingUp: false,
   isMovingLeft: false,
@@ -41,6 +49,8 @@ const PlayerJumpSpeed = 0.1;
 const PlayerRopeNudgeSpeed = 0.001;
 const PlayerRopeLengthSpeed = 0.075;
 
+const MoveMaxSlope = 1;
+const GroundSnapDist = 1;
 
 const BulletSpeed = 0.5;
 const BulletRecoil = 0.01;
@@ -57,27 +67,13 @@ const mousePos = [ 20.4, 20 ];
 let entities = [ player ];
 
 
-MaskMap.setTerrainRect( map, 5, 8, 20, 5, Terrain.Empty );
-MaskMap.setTerrainRect( map, 2, 10, 25, 6, Terrain.Empty );
-MaskMap.setTerrainRect( map, 5, 7, 4, 6, Terrain.Empty );
-MaskMap.setTerrainRect( map, 20, 4, 8, 15, Terrain.Empty );
-MaskMap.setTerrainRect( map, 10, 16, 10, 1, Terrain.Empty );
-MaskMap.setTerrainRect( map, 15, 17, 5, 1, Terrain.Empty );
-
-MaskMap.setTerrainCircle( map, 30, 30, 20, Terrain.Empty );
-MaskMap.setTerrainCircle( map, 50, 50, 30, Terrain.Empty );
-MaskMap.setTerrainRect( map, 50, 30, 200, 40, Terrain.Empty );
-MaskMap.setTerrainCircle( map, 200, 50, 40, Terrain.Empty );
-MaskMap.setTerrainCircle( map, 250, 50, 20, Terrain.Empty );
-
-
 const backgroundImage = new OffscreenCanvas( map.cols, map.rows );
 const backgroundCtx = backgroundImage.getContext( '2d' );
 backgroundCtx.fillStyle = '#321';
 backgroundCtx.fillRect( 0, 0, map.cols, map.rows );
 
 const foregroundImage = new OffscreenCanvas( map.cols, map.rows );
-const foregroundCtx = foregroundImage.getContext( '2d' );
+const foregroundCtx = foregroundImage.getContext( '2d', { willReadFrequently: true } );
 foregroundCtx.fillStyle = 'rgb(200, 100, 20)';
 foregroundCtx.fillRect( 0, 0, map.cols, map.rows );
 
@@ -92,24 +88,186 @@ gameCanvas.update = ( dt ) => {
 
   entities.forEach( entity => {
 
+    //
+    // Forces
+    //
+    const forces = vec2.fromValues( 0, Gravity );
 
-    // TODO: At some point, this will be dependent on us detecting that we are on the ground and in walking mode
-    if ( entity.type === 'player' && entity.rope === undefined ) {
+
+    // Rope forces
+    if ( entity.rope ) {
+
+      //
+      // Swing left or right
+      //
+
       if ( entity.isMovingLeft ) {
-        entity.vel[ 0 ] = -PlayerMoveSpeed;
+        entity.vel[ 0 ] -= PlayerRopeNudgeSpeed;
       }
       else if ( entity.isMovingRight ) {
-        entity.vel[ 0 ] = PlayerMoveSpeed;
+        entity.vel[ 0 ] += PlayerRopeNudgeSpeed;
       }
-      else {
-        entity.vel[ 0 ] = 0;
+
+      //
+      // Change rope length
+      //
+      let ropeSpeed = 0;
+
+      // TODO: Use tanh here to deal with cases where we are close to min/max length?
+      if ( entity.isMovingUp && entity.rope.length > 10 ) {
+        ropeSpeed = -PlayerRopeLengthSpeed;
+      }
+      else if ( entity.isMovingDown && entity.rope.length < 200 ) {
+        ropeSpeed = PlayerRopeLengthSpeed;
+      }
+
+      entity.rope.length += ropeSpeed * dt;
+
+      //
+      // Apply rope forces
+      //
+
+      const ropeVec = vec2.subtract( [], entity.pos, entity.rope.pos );
+      const ropeDist = vec2.length( ropeVec );
+
+      if ( ropeDist > 0 ) {
+        const ropeDir = vec2.scale( [], ropeVec, 1 / ropeDist );  // cheaper than normalize?
+
+        const velocityAlongRope = vec2.dot( entity.vel, ropeDir );
+        const radialError = velocityAlongRope - ropeSpeed;
+
+        if ( ropeDist > entity.rope.length ) {
+          // Damped spring: F = -kx - cv
+          const displacement = Math.max( 0, ropeDist - entity.rope.length );
+          const springForce = -RopeSpringConstant * displacement - RopeSpringDamping * radialError;
+
+          vec2.scaleAndAdd( forces, forces, ropeDir, springForce );
+        }
+
+        const radialVelocity = vec2.scale( [], ropeDir, velocityAlongRope );    // TODO: or radialError?
+        const tangentialVelocity = vec2.subtract( [], entity.vel, radialVelocity );
+
+        vec2.scaleAndAdd( forces, forces, tangentialVelocity, -RopeSwingDamping );
       }
     }
 
-    // Jumping cancels rope
-    if ( entity.rope && entity.isJumping ) {
-      delete entity.rope;
+    // TODO: Need to figure out how to stop moving in the air without messing up other movement
+    // if ( entity.type === 'player' && entity.rope === undefined ) {
+    //   if ( entity.isMovingLeft ) {
+    //     entity.vel[ 0 ] = -PlayerMoveSpeed;
+    //   }
+    //   else if ( entity.isMovingRight ) {
+    //     entity.vel[ 0 ] = PlayerMoveSpeed;
+    //   }
+    //   else {
+    //     entity.vel[ 0 ] = 0;
+    //   }
+    // }
+
+
+    vec2.scaleAndAdd( entity.vel, entity.vel, forces, dt );
+
+
+    //
+    // Movement
+    //
+
+    let timeLeft = dt;
+
+    for ( let step = 0; step < 2; step ++ ) {
+
+      const hit = Worms.getHit( map, entity, timeLeft );
+
+      if ( /*0 < bestHit.time &&*/ hit.time < timeLeft ) {
+        vec2.scaleAndAdd( entity.pos, entity.pos, entity.vel, hit.time );
+        timeLeft -= hit.time;
+
+        const groundNormal = vec2.sub( [], entity.pos, hit.pos );
+        vec2.normalize( groundNormal, groundNormal );
+
+        const normalVelocity = vec2.dot( entity.vel, groundNormal );
+
+        if ( normalVelocity < 0 ) {
+          vec2.scaleAndAdd( entity.pos, hit.pos, groundNormal, entity.radius );
+          vec2.scaleAndAdd( entity.vel, entity.vel, groundNormal, -normalVelocity );
+        }
+
+        //
+        // Players can walk on ground instead of roll
+        //
+        if ( entity.type === 'player' ) {
+          const slope = Math.atan2( groundNormal[ 0 ], -groundNormal[ 1 ] );
+
+          if ( Math.abs( slope ) < MoveMaxSlope ) {
+            const moveDir = entity.isMovingLeft ? -1 : entity.isMovingRight ? 1 : 0;
+
+            const moveVec = [ -moveDir * groundNormal[ 1 ], moveDir * groundNormal[ 0 ] ];
+            vec2.scale( entity.vel, moveVec, PlayerMoveSpeed );
+
+            // Just go ahead and walk, then back us out of the ground
+            // Feels inelegant, but seems to work for now
+            vec2.scaleAndAdd( entity.pos, entity.pos, entity.vel, timeLeft );
+            timeLeft = 0;
+
+            const touch = Worms.getTouch( map, entity, GroundSnapDist );
+
+            if ( touch.pos ) {
+              // Snap to ground
+              const groundNormal = vec2.sub( [], entity.pos, touch.pos );
+              vec2.normalize( groundNormal, groundNormal );
+
+              const normalVelocity = vec2.dot( entity.vel, groundNormal );
+
+              if ( normalVelocity < 0 ) {
+                vec2.scaleAndAdd( entity.pos, touch.pos, groundNormal, entity.radius );
+                vec2.scaleAndAdd( entity.vel, entity.vel, groundNormal, -normalVelocity );
+              }
+            }
+
+
+            if ( entity.isJumping ) {
+              entity.vel[ 1 ] = -PlayerJumpSpeed;
+            }
+          }
+        }
+
+        //
+        // Collision response for other entities
+        //
+        if ( entity.type === 'bullet' ) {
+          entity.health = 0;
+
+          // TODO: Should these changes be made outside the update?
+          MaskMap.setTerrainCircle( map, entity.pos[ 0 ], entity.pos[ 1 ], entity.radius * 4, Terrain.Empty );
+        }
+        else if ( entity.type === 'casing' ) {
+          entity.rotVel = 0;
+        }
+        else if ( entity.type === 'rope' ) {
+          entity.health = 0;
+
+          const parent = entities.find( e => e.id === entity.parentId );
+          if ( parent ) {
+            parent.rope = {
+              pos: entity.pos,
+              length: vec2.distance( parent.pos, entity.pos ),
+            };
+          }
+        }
+      }
+      else {
+        vec2.scaleAndAdd( entity.pos, entity.pos, entity.vel, timeLeft );
+        break;
+      }
     }
+
+    if ( entity.rotVel ) {
+      entity.rot += entity.rotVel * dt;
+    }
+
+    //
+    // Other actions
+    //
 
     if ( entity.isShooting ) {
       // Bullet first...
@@ -164,145 +322,9 @@ gameCanvas.update = ( dt ) => {
       entity.isShootingRope = false;  // one rope per right-click
     }
 
-
-    //
-    // Apply forces
-    //
-    
-    const forces = vec2.fromValues( 0, Gravity );
-  
-    if ( entity.rope ) {
-
-      //
-      // Swing left or right
-      //
-
-      if ( entity.isMovingLeft ) {
-        entity.vel[ 0 ] -= PlayerRopeNudgeSpeed;
-      }
-      else if ( entity.isMovingRight ) {
-        entity.vel[ 0 ] += PlayerRopeNudgeSpeed;
-      }
-
-
-      //
-      // Change rope length
-      //
-      let ropeSpeed = 0;
-
-      // TODO: Use tanh here to deal with cases where we are close to min/max length?
-      if ( entity.isMovingUp && entity.rope.length > 10 ) {
-        ropeSpeed = -PlayerRopeLengthSpeed;
-      }
-      else if ( entity.isMovingDown && entity.rope.length < 200 ) {
-        ropeSpeed = PlayerRopeLengthSpeed;
-      }
-
-      entity.rope.length += ropeSpeed * dt;
-
-
-      //
-      // Apply rope forces
-      //
-
-      const ropeVec = vec2.subtract( [], entity.pos, entity.rope.pos );
-      const ropeDist = vec2.length( ropeVec );
-    
-      if ( ropeDist > 0 ) {
-        const ropeDir = vec2.scale( [], ropeVec, 1 / ropeDist );  // cheaper than normalize?
-    
-        const velocityAlongRope = vec2.dot( entity.vel, ropeDir );
-        const radialError = velocityAlongRope - ropeSpeed;
-    
-        if ( ropeDist > entity.rope.length ) {
-          // Damped spring: F = -kx - cv
-          const displacement = Math.max( 0, ropeDist - entity.rope.length );
-          const springForce = -RopeSpringConstant * displacement - RopeSpringDamping * radialError;
-          
-          vec2.scaleAndAdd( forces, forces, ropeDir, springForce );
-        }
-    
-        const radialVelocity = vec2.scale( [], ropeDir, velocityAlongRope );    // TODO: or radialError?
-        const tangentialVelocity = vec2.subtract( [], entity.vel, radialVelocity );
-    
-        vec2.scaleAndAdd( forces, forces, tangentialVelocity, -RopeSwingDamping );
-      }
-    }
-  
-    vec2.scaleAndAdd( entity.vel, entity.vel, forces, dt );
-
-    if ( entity.rotVel ) {
-      entity.rot += entity.rotVel * dt;
-    }
-
-    // vec2.scaleAndAdd( entity.pos, entity.pos, entity.vel, dt );
-
-    let timeLeft = dt;
-
-    for ( let step = 0; step < 2; step ++ ) {
-      const bestHit = Worms.getHit( map, entity, timeLeft );
-
-      if ( bestHit.time < Infinity ) {
-        vec2.scaleAndAdd( entity.pos, entity.pos, entity.vel, bestHit.time );
-
-        // Left/Right wall
-        if ( bestHit.line[ 0 ] === bestHit.line[ 2 ] ) {
-          // Climb wall if it's only 1 tall
-          //  - if we're moving left, the line we hit is at testX + 1
-          //  - use the correct bestHit.line y based on orientation
-          const testCol = Math.floor( bestHit.line[ 0 ] ) + ( entity.vel[ 0 ] < 0 ? -1 : 0 );
-          const testRow = Math.floor( bestHit.line[ entity.vel[ 0 ] < 0 ? 1 : 3 ] ) - 1;
-
-          if ( 0 <= testRow && map.data[ testCol + testRow * map.cols ] == Terrain.Empty ) {
-            // TOOD: slower as we get toward top so we don't "hop" so much?
-            entity.vel[ 1 ] = entity.isJumping ? -PlayerJumpSpeed : -PlayerMoveSpeed;
-          }
-
-          entity.vel[ 0 ] = 0;
-        }
-
-        // Ceiling/Floor
-        else {
-          // Floor
-          if ( bestHit.line[ 0 ] < bestHit.line[ 2 ] ) {
-            entity.vel[ 1 ] = entity.isJumping ? -PlayerJumpSpeed : 0;
-          }
-
-          // Ceiling
-          else {
-            entity.vel[ 1 ] = 0;
-          }
-        }
-
-        timeLeft -= bestHit.time;
-
-        if ( entity.type === 'bullet' ) {
-          entity.health = 0;
-
-          MaskMap.setTerrainCircle( map, entity.pos[ 0 ], entity.pos[ 1 ], entity.radius * 4, Terrain.Empty );
-          break;
-        }
-        else if ( entity.type === 'casing' ) {
-          entity.rotVel = 0;
-          break;
-        }
-        else if ( entity.type === 'rope' ) {
-          entity.health = 0;
-
-          const parent = entities.find( e => e.id === entity.parentId );
-          if ( parent ) {
-            parent.rope = {
-              pos: entity.pos,
-              length: vec2.distance( parent.pos, entity.pos ),
-            };
-          }
-        }
-      }
-      else {
-        vec2.scaleAndAdd( entity.pos, entity.pos, entity.vel, timeLeft );
-
-        break;
-      }
+      // Jumping cancels rope
+    if ( entity.isJumping && entity.rope ) {
+      delete entity.rope;
     }
   } );
 
@@ -319,7 +341,7 @@ gameCanvas.draw = ( ctx ) => {
   ctx.drawImage( backgroundImage, 0, 0 );
 
   // shadowLayerCtx.clearRect( 0, 0, map.cols, map.rows );
-  
+
   MaskMap.makeMaskTransparent( foregroundCtx, map, Terrain.Empty );
   // shadowLayerCtx.drawImage( foregroundImage, 0, 0 );
   ctx.drawImage( foregroundImage, 0, 0 );
@@ -331,13 +353,13 @@ gameCanvas.draw = ( ctx ) => {
   // ctx.shadowOffsetX = -9;
   // ctx.shadowOffsetY = 9;
   // ctx.shadowBlur = 0;
-  
+
   // ctx.drawImage( shadowLayerImage, 0, 0 );
 }
 
 
 
-const keyInput = new KeyInput();
+const keyInput = new KeyInput( /*() => { gameCanvas.update( 10 ); gameCanvas.redraw() }*/ );
 
 keyInput.Keys = {
   PlayerUp: 'w',
@@ -361,6 +383,11 @@ keyInput.Actions = {
 document.addEventListener( 'pointerdown', e => {
   player.isShooting = e.buttons & 1;
   player.isShootingRope = e.buttons & 2;
+
+  // if ( e.buttons === 2 ) {
+  //   vec2.set( player.pos, gameCanvas.getX( e.x ), gameCanvas.getY( e.y ) );
+  //   vec2.set( player.vel, 0, 0 );
+  // }
 } );
 
 document.addEventListener( 'pointerup', e => {

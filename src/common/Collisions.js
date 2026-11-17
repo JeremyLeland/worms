@@ -1,3 +1,20 @@
+export function pointDistToLineSegment( x, y, x1, y1, x2, y2 ) {
+  const px = x2 - x1;
+  const py = y2 - y1;
+  const D = ( px * px ) + ( py * py );
+
+  if ( D === 0 ) {
+    return Math.hypot( x - x1, y - y1 );
+  }
+
+  const t = Math.max( 0, Math.min( 1, ( ( x - x1 ) * px + ( y - y1 ) * py ) / D ) );
+
+  const closestX = x1 + t * px;
+  const closestY = y1 + t * py;
+
+  return Math.hypot( x - closestX, y - closestY );
+}
+
 // NOTE: The epsilons are important, really! 
 // You're always tempted to just use zero, but the use of EPISILON is the result of a lot of blood, sweat, and debugging
 const EPSILON = 1e-6;
@@ -21,7 +38,10 @@ export function timeToCircleHitLine( x, y, dx, dy, radius, x1, y1, x2, y2 ) {
   // Don't consider it a hit if we are moving away or parallel
   const vDotN = dx * normX + dy * normY;
   if ( vDotN >= 0 ) {
-    return Infinity;
+    // return Infinity;
+    return {
+      time: Infinity,
+    };
   }
 
   const distFromLine = ( x1 - x ) * normX + ( y1 - y ) * normY;
@@ -39,26 +59,55 @@ export function timeToCircleHitLine( x, y, dx, dy, radius, x1, y1, x2, y2 ) {
   if ( closestOnLine <= 0 - radius / len || 1 + radius / len <= closestOnLine ) {
 
     // console.log( '   barely touching case, returning Infinity' );
-    return Infinity;
+    // return Infinity;
+    return {
+      time: Infinity,
+    };
   }
 
   if ( closestOnLine <= 0 ) {
     // console.log( '   hitting left of line' );
-    return timeToCircleHitPoint( x, y, dx, dy, radius, x1, y1 );
+
+    const hit = {
+      time: timeToCircleHitPoint( x, y, dx, dy, radius, x1, y1 ),
+    };
+
+    if ( hit.time < Infinity ) {
+      hit.pos = [ x1, y1 ];
+    }
+
+    return hit;
   }
   else if ( 1 <= closestOnLine ) {
     // console.log( '   hitting right of line' );
-    return timeToCircleHitPoint( x, y, dx, dy, radius, x2, y2 );
+
+    const hit = {
+      time: timeToCircleHitPoint( x, y, dx, dy, radius, x2, y2 ),
+    };
+
+    if ( hit.time < Infinity ) {
+      hit.pos = [ x2, y2 ];
+    }
+
+    return hit;
   }
   else {
     // console.log( '   hitting within line' );
 
     // For our purposes, we don't care about collisions in the past
     if ( hitTime < -EPSILON ) {
-      return Infinity;
+      // return Infinity;
+      return {
+        time: Infinity,
+      };
     }
     else {
-      return hitTime;
+      // return hitTime;
+      return {
+        time: hitTime,
+        pos: [ hitX - normX * radius, hitY - normY * radius ],
+        // norm: [ normX, normY ],
+      };
     }
   }
 }
@@ -72,10 +121,21 @@ function timeToCircleHitPoint( x, y, dx, dy, radius, cx, cy ) {
   const fX = x - cx;
   const fY = y - cy;
 
+  // See if we are moving away from point
+  const len = Math.hypot( fX, fY );
+  const nx = fX / len;
+  const ny = fY / len;
+
+  const vDotN = dx * nx + dy * ny;
+
+  if ( vDotN >= 0 ) {
+    return Infinity;
+  }
+   
   const a = dX * dX + dY * dY;
   const b = 2 * ( fX * dX + fY * dY );
   const c = ( fX * fX + fY * fY ) - Math.pow( radius, 2 );
-
+  
   return solveQuadratic( a, b, c );
 }
 

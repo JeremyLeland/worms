@@ -1,3 +1,4 @@
+import * as MaskMap from '../src/MaskMap.js';
 import * as Collisions from '../src/common/Collisions.js';
 import * as Util from '../src/common/Util.js';
 
@@ -21,6 +22,7 @@ export function drawEntities( ctx, entities ) {
       ctx.save(); {
         ctx.translate( ...entity.pos );
         ctx.rotate( entity.rot );
+        ctx.scale( entity.radius, entity.radius );
 
         ctx.fillStyle = 'tan';
         ctx.fillRect( -1, -0.5, 2, 1 );
@@ -45,12 +47,67 @@ function drawRope( ctx, from, to ) {
   // Util.drawLinePixel( ctx, from, to );
 }
 
+export function getTouch( map, entity, touchDist, debugCtx ) {
+  const closest = {
+    dist: touchDist,
+  };
+
+  const minX = entity.pos[ 0 ] - entity.radius;
+  const minY = entity.pos[ 1 ] - entity.radius;
+  const maxX = entity.pos[ 0 ] + entity.radius;
+  const maxY = entity.pos[ 1 ] + entity.radius;
+  
+  const testLeft = Math.floor( minX - touchDist );
+  const testTop  = Math.floor( minY - touchDist );
+  const testRight = Math.floor( maxX + touchDist );
+  const testBottom = Math.floor( maxY + touchDist );
+  
+  for ( let testRow = testTop; testRow <= testBottom; testRow ++ ) {
+    for ( let testCol = testLeft; testCol <= testRight; testCol ++ ) {
+      
+      if ( MaskMap.getTerrain( map, testCol, testRow ) ) {
+        
+        // TODO: Make this a constant array of lines with offsets, and add testCol/testRow in below?
+        const lines = [
+          [ testCol, testRow + 1, testCol, testRow ],         // left
+          [ testCol, testRow, testCol + 1, testRow ],         // top
+          [ testCol + 1, testRow, testCol + 1, testRow + 1 ], // right
+          [ testCol + 1, testRow + 1, testCol, testRow + 1 ], // bottom
+        ];
+
+        lines.forEach( line => {
+          
+          const [ x, y ] = entity.pos;
+          const [ x1, y1, x2, y2 ] = line;
+
+          const px = x2 - x1;
+          const py = y2 - y1;
+          const D = ( px * px ) + ( py * py );
+
+          const t = D === 0 ? 0 : Math.max( 0, Math.min( 1, ( ( x - x1 ) * px + ( y - y1 ) * py ) / D ) );
+
+          const closestX = x1 + t * px;
+          const closestY = y1 + t * py;
+
+          const dist = Math.hypot( x - closestX, y - closestY ) - entity.radius;
+
+          if ( dist < closest.dist ) {
+            closest.dist = dist;
+            closest.pos = [ closestX, closestY ];
+          }
+        } );
+      }
+    }
+  }
+
+  return closest;
+}
+
 export function getHit( map, entity, dt, debugCtx ) {
   // console.log( ' getHit' );
 
   let bestHit = {
     time: Infinity,
-    line: null,
   };
 
   const goalPos = vec2.scaleAndAdd( [], entity.pos, entity.vel, dt );
@@ -73,7 +130,7 @@ export function getHit( map, entity, dt, debugCtx ) {
   for ( let testRow = testTop; testRow <= testBottom; testRow ++ ) {
     for ( let testCol = testLeft; testCol <= testRight; testCol ++ ) {
 
-      if ( map.data[ testCol + testRow * map.cols ] === 0 ) {
+      if ( MaskMap.getTerrain( map, testCol, testRow ) === 0 ) {
         if ( debugCtx ) {
           debugCtx.fillStyle = '#0f04';
           debugCtx.fillRect( testCol, testRow, 1, 1 );
@@ -90,6 +147,7 @@ export function getHit( map, entity, dt, debugCtx ) {
         const [ dx, dy ] = entity.vel;
         const r = entity.radius;
 
+        // TODO: Make this a constant array of lines with offsets, and add testCol/testRow in below?
         const lines = [
           [ testCol, testRow + 1, testCol, testRow ],         // left
           [ testCol, testRow, testCol + 1, testRow ],         // top
@@ -98,21 +156,21 @@ export function getHit( map, entity, dt, debugCtx ) {
         ];
 
         lines.forEach( line => {
-          const hitTime = Collisions.timeToCircleHitLine( x, y, dx, dy, r, ...line );
+          const hit = Collisions.timeToCircleHitLine( x, y, dx, dy, r, ...line );
 
           // if ( hitTime < Infinity ) {
           //   console.log( '  hitTime for ', line, ' is ', hitTime );
           // }
 
           // Make sure hitTime is within our update window, helps avoid other weirdness
-          if ( hitTime < bestHit.time && hitTime < dt ) {
-            bestHit.time = hitTime;
+          if ( hit.time < bestHit.time && hit.time < dt ) {
+            bestHit = hit;
             bestHit.line = line;
           }
 
           if ( debugCtx ) {
-            if ( hitTime < Infinity ) {
-              const val = ( 1 - hitTime ) * 255;
+            if ( hit.time < Infinity ) {
+              const val = ( 1 - hit.time ) * 255;
 
               debugCtx.strokeStyle = `rgb( 128, ${ val }, 255 )`;
               debugCtx.lineWidth = 0.1;

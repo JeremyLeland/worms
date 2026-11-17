@@ -1,3 +1,158 @@
+11/17:
+  - Add rope back in
+
+
+11/12:
+  - Integrate roll and bounce test into main game
+    - Shoot bullets to change map
+      - Will need sweep test back in
+    - Ninja rope
+
+  - Maybe do a sweep, see where we end up, then do a touch test?
+    - seems to work with player of larger radius
+    - smaller radius things jitter a lot then fall through the floor
+    - maybe we should check touch first, then only sweep if not touching
+
+  - Figured out why shells are jittering
+    - Shell is at an inner corner
+    - It is alternatingly being detected as touching the left side vs touching the bottom
+    - When it is touching left side, it is allowed to fall
+      - Then it detects overlap below on next frame, and corrects
+      - Wasn't happening before because radius was larger than 1
+        - easy fix is don't let anything have radius of 1 :-P
+        - But this could also happen at corner of map if it's a larger square
+      - Hack: run it twice to get both before draw happens?
+
+  - It's still awkward having the touch vs the sweep
+    - NEXT: Try adding hit pos to the sweep result to see if I can use that for to fix my velocity like touch
+      - Need to be clear on which position we are talking about
+        - I think it should be on the line
+
+    - Added pos to sweep result, validated with test
+    - Trying to use for game
+      - Seems to work for falling down a slope, but once we are moving horizontally along floor, it's picking up the wrong hit
+      - This is why we had that special casing before
+        - Is there something less hacky I can use? The one I have broke some other basic cases (moving diagonally)
+          - Diagonal case was pos: [ 20, 20 ] vel: [ 30, 30 ] on our test map (it missed a corner directly in front of it)
+        - We need a "moving away from" concept like the vDotN, but taking into account the endpoint instead of the entire line
+
+    - It's going through the wall
+      - It only does one test, which is detecting a hit at -0 on the flat ground
+        - It backs out of this, adjusts velocity, then runs the rest of it for the rest of the timeLeft
+      - Needs to do at least another test
+        - Make this part of a loop?
+
+    - Can sort of walk with getHit
+      - The problem is if my walk vector is detected as an immediate hit
+
+    - It really is two different code paths
+      - getTouch works better for walking, especailly since we want to snap to where we are
+      - Maybe player just needs a separate movement step?
+        - getHit seems to work well enough for shells rolling down slopes
+        - It's just the walking that needs the extra control
+      - Walking us along the slope and snapping us out of the ground seems to work for now
+        - Feels inelegant, but looks good for the moment
+
+  - NEXT: Get ropes back in here!
+
+
+11/11:
+  - Can I apply gravity vector at the beginning of every update, then take away based on normal?
+    - Instead of applying gravity in the direction of slope?
+    - Does this do the same thing?
+      - Might be cleaner than having different paths for roll and fall
+
+  - NEXT: Fall as well as roll
+  - THEN: Jumping, walking if shallow enough slope
+
+  - Managed to get something much simpler that seems to work well
+    - Just apply gravity and take out the groundNormal component
+    - Did one loop instead of two, seems like it's always touching ground
+    - Simplified so we only snap if we're headed into wall
+    - Doesn't account for walking yet and doesn't do any sweep testing
+
+  - Future thought
+    - Would some sort of edge detection be useful?
+    - Turn the grid into line edges
+    - Then we'd know the actual normal of where we are
+    - Might be smoother for drawing and for player movement
+
+  DONE: Walking and jumping
+    - We even bounce off walls and ceilings with jumps
+
+
+11/10:
+  - Let's not get too carried away here. Just do the simplest thing first.
+  - Keep all the walking and hitting stuff the same
+  - If they're on ground but on too steep a slope, automatically move them as if they were walking
+    - It's not "physically accurate" by any means, but it'll get them off the slope
+      - Maybe have a faster "slide speed" to use until they hit shallower ground
+  - There's probably a grand reworking of everything that could happen, but we don't really need to model bouncing yet
+    - Bullets hit and immediately burst (for now)
+    - Shells hit and fall, and that seemed to look fine with what we were doing
+    - Player does their own movement. I just didn't want to let them stop on steep slopes.
+      - So nudge them along automatically if it's too steep.
+
+  - Except that we kind of do want to bounce, like if we jump into a ceiling
+    - Right now, we awkardly stick for a bit? Maybe it's just us dropping to zero.
+      - Also going to be all kinds of issues with narrow spaces
+        - Man, this movement is a pain in the ass to get right
+
+  - Playing with rolling
+    - Adding gravity to velocity based on slope
+    - If we're on flat ground, there's no adding to happen
+      - Need to handle this better
+    - Removing the component of the velocity that goes into the groundNormal seems to solve all our problems
+
+  - Try to use a loop to avoid copying the snap code
+    
+
+11/9:
+  - Trying to have something where I slide around the level without player movement
+  - Will eventually switch this to player control if we're at a slope we can handle
+  - Should I treat collisions with walls like this, too?
+    - Need to know the closest point of interaction, then
+    - Can we use the search for nearby points from above?
+      - Run physics until we hit something, then run the nearby points check to see if we walk/slide?
+
+11/7:
+  - If slope is in walk range, just do walking
+  - If slope is outside walk range, apply gravity
+    - gravity times abs( x component of normal ) * move vector
+
+11/5:
+  - Sticking to closest point on line seems way easier
+  - DONE: Simply finding closest point, snapping to it, then moving perpendicular to normal looks pretty good!
+    - It often moves us into collision, but next frame should fix it
+      - Is it worth doing the snap twice per frame so we can be exact?
+        - Just wait for now
+  - DONE: How to avoid going up too steep a slope?
+    - Limit the move vector?
+      - Won't work in initial tests with big blocks, but might be usable when we're bigger
+        - Seems to work for now
+  - Make it realtime and add jumping back in
+    - Need to make sure we don't snap while jumping
+      - Check for movement before snapping?
+        - Check direction of movement before snapping?
+
+  - DONE: Added Jumping and movement in air
+
+  - NEXT:
+    - Keep track of angle to ground as well as slope of ground?
+      - Account for fact that I can 'hang on by a thread' to some of the dirt circles
+      - I should fall off of these much quicker
+    - Maybe what we need is to slide down slopes that are too steep for us to walk
+      - That would bring us off the edge of the circles, I think
+      - Add portion of gravity instead of PlayerMoveSpeed if too steep?
+
+11/4:
+  - Revisting this after working on bounding box based movement
+    - That had a large box balanced on a single corner pixel
+    - Would prefer a circle closer to the various vertices, I think
+
+  - Revisit sticking to closest line (including endpoint)
+
+
 10/13:
   - Want to try "sticking" to floors/walls
     - Find closest point of wall
@@ -19,6 +174,33 @@
     - Break the stick by jumping
       - For game, ultimately still just straight up
       - For practice, could jump in direction of normal
+
+    - Collision changes
+      - Making the circleVsLine collision return hitInfo with time, pos, and norm
+      - Don't really need the line with that info, since all we used that for was the normal
+      Worms.getHit can just return the best hit it gets from collisions, I think
+
+    - Got this seeming to work while moving off an edge, but...
+      - Why is it not moving up an edge?
+        - Now it's not moving anywhere
+          - The first hit is time 0, the next hit is time -0
+            - Can I use that negative? 
+            - Should I be returning an infinity someplace? 
+            - Does some normal or dot product help me here?
+          - Is this where we need to ignore this line because we're already hitting it?
+          - Or is this where we need to move back so we aren't colliding?
+      - This specifically seems to be a problem with endpoints of lines
+        - Maybe we shouldn't include hit times of zero if its along the line endpoints?
+      - Why is bestHit.pos in the middle of player sometimes?
+
+    - We really need separate forms of collision detection for this
+      - Moving around the endpoints is going to keep saying it's colliding and stop it
+      - The endpoints is the tricky part
+        - Instead of trying to move against the normal, recognize the special case and move around it angularly?
+        - Or this enough of a mess that we should just use bounding boxes and slide over the hard edge, with no normaling?
+          - That's certainly cleaner...
+
+
   
 10/8:
   - Rope feels good, need to fix walking
