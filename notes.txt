@@ -1,3 +1,7 @@
+11/17:
+  - Add rope back in
+
+
 11/12:
   - Integrate roll and bounce test into main game
     - Shoot bullets to change map
