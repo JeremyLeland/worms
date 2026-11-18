@@ -4,15 +4,29 @@ import * as Util from '../src/common/Util.js';
 
 import { vec2 } from '../lib/gl-matrix.js';
 
+const GunLength = 12;
+const GunHeight = 2;
+
 export function drawEntities( ctx, entities ) {
   entities.forEach( entity => {
     if ( entity.type === 'player' ) {
       if ( entity.rope ) {
         drawRope( ctx, entity.pos, entity.rope.pos );
       }
-      
-      ctx.fillStyle = 'green';
-      Util.drawPoint( ctx, entity.pos, entity.radius );
+
+      ctx.save(); {
+        ctx.translate( ...entity.pos );
+
+        ctx.fillStyle = entity.color;
+        ctx.beginPath();
+        ctx.arc( 0, 0, entity.radius, 0, Math.PI * 2 );
+        ctx.fill();
+
+        ctx.rotate( entity.lookAngle );
+        ctx.fillStyle = 'lightgray';
+        ctx.fillRect( 0, -GunHeight / 2, GunLength, GunHeight );
+      }
+      ctx.restore();
     }
     else if ( entity.type === 'bullet' ) {
       ctx.fillStyle = 'white';
@@ -56,17 +70,17 @@ export function getTouch( map, entity, touchDist, debugCtx ) {
   const minY = entity.pos[ 1 ] - entity.radius;
   const maxX = entity.pos[ 0 ] + entity.radius;
   const maxY = entity.pos[ 1 ] + entity.radius;
-  
+
   const testLeft = Math.floor( minX - touchDist );
   const testTop  = Math.floor( minY - touchDist );
   const testRight = Math.floor( maxX + touchDist );
   const testBottom = Math.floor( maxY + touchDist );
-  
+
   for ( let testRow = testTop; testRow <= testBottom; testRow ++ ) {
     for ( let testCol = testLeft; testCol <= testRight; testCol ++ ) {
-      
+
       if ( MaskMap.getTerrain( map, testCol, testRow ) ) {
-        
+
         // TODO: Make this a constant array of lines with offsets, and add testCol/testRow in below?
         const lines = [
           [ testCol, testRow + 1, testCol, testRow ],         // left
@@ -76,7 +90,7 @@ export function getTouch( map, entity, touchDist, debugCtx ) {
         ];
 
         lines.forEach( line => {
-          
+
           const [ x, y ] = entity.pos;
           const [ x1, y1, x2, y2 ] = line;
 

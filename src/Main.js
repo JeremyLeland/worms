@@ -30,7 +30,9 @@ let player = {
     pos: [ 100, 0 ],
     length: 50,
   },
+  lookAngle: 0,
   radius: 8,
+  color: 'green',
   isMovingUp: false,
   isMovingLeft: false,
   isMovingDown: false,
@@ -265,14 +267,17 @@ gameCanvas.update = ( dt ) => {
       entity.rot += entity.rotVel * dt;
     }
 
+    if ( entity.id === 'player1' ) {
+      entity.lookAngle = Math.atan2( mousePos[ 1 ] - entity.pos[ 1 ], mousePos[ 0 ] - entity.pos[ 0 ] );
+    }
+
     //
     // Other actions
     //
 
     if ( entity.isShooting ) {
       // Bullet first...
-      const lineAngle = Math.atan2( mousePos[ 1 ] - entity.pos[ 1 ], mousePos[ 0 ] - entity.pos[ 0 ] );
-      const lineVec = [ Math.cos( lineAngle ), Math.sin( lineAngle ) ];
+      const lineVec = [ Math.cos( entity.lookAngle ), Math.sin( entity.lookAngle ) ];
 
       newEntities.push( {
         type: 'bullet',
@@ -286,16 +291,16 @@ gameCanvas.update = ( dt ) => {
       vec2.scaleAndAdd( entity.vel, entity.vel, lineVec, -BulletRecoil );
 
       // ...then casing (so it includes recoil)
-      const isFacingLeft = lineAngle < -Math.PI / 2 || Math.PI / 2 < lineAngle;
+      const isFacingLeft = entity.lookAngle < -Math.PI / 2 || Math.PI / 2 < entity.lookAngle;
 
-      const casingAngle = lineAngle + 2 * ( isFacingLeft ? 1 : -1 );
+      const casingAngle = entity.lookAngle + 2 * ( isFacingLeft ? 1 : -1 );
       const casingVec = [ Math.cos( casingAngle ), Math.sin( casingAngle ) ];
 
       newEntities.push( {
         type: 'casing',
         pos: vec2.clone( entity.pos ),
         vel: vec2.scaleAndAdd( [], entity.vel, casingVec, ( 0.75 + 0.5 * Math.random() ) * CasingSpeed ),
-        rot: lineAngle + ( -0.5 + Math.random() ) * 1,
+        rot: entity.lookAngle + ( -0.5 + Math.random() ) * 1,
         rotVel: ( isFacingLeft ? 1 : -1 ) * ( 0.75 + 0.5 * Math.random() ) * CasingRotSpeed,
         radius: 1,
         health: 1,
@@ -305,8 +310,7 @@ gameCanvas.update = ( dt ) => {
     if ( entity.isShootingRope ) {
       delete entity.rope;
 
-      const lineAngle = Math.atan2( mousePos[ 1 ] - entity.pos[ 1 ], mousePos[ 0 ] - entity.pos[ 0 ] );
-      const lineVec = [ Math.cos( lineAngle ), Math.sin( lineAngle ) ];
+      const lineVec = [ Math.cos( entity.lookAngle ), Math.sin( entity.lookAngle ) ];
 
       newEntities.push( {
         type: 'rope',

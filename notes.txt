@@ -1,6 +1,53 @@
 11/17:
-  - Add rope back in
+  - DONE: Add rope back in
+  - Outstanding movement issues:
+    - Need to properly account for friction along tangent when non-players are rolling
+    - Figure out why they are still slowing down somewhat?
+      - Can live with it for now
+      - But I'm not intentionally applying any friction yet, so they *shouldn't* be slowing down...
+    - Detect when we're overlapping multiple directions and nudge us out of it?
+      - Maybe check again after nudge if we are overlapping
+        - Either try again or put us back?
+  - IDEAS:
+    - Dig
+      - Tap opposite direction key while holding down primary direction (like Liero)
+      - This takes out a chunk in front of you
+    - Throw grenades
+      - How to control arc?
+      - Timed projectile that explodes into shrapnel
+      - Need to model explosion damage (distance from explosion?)
+      - Explosion affects velocity of nearby objects? (send them flying!)
+        - Would need to balance this with player movement while in air
+    - Proper weapons
+      - Rifle
+        - Bullet trails
+          - How to persist these after bullet hits wall?
+            - Have bullet dump its trail object as new entity?
+            - Have trail separate from beginning and be updated by bullet?
+      - Shotgun
+      - Rocket launcher?
+        - Rockets explode into shrapnel like grenade?
+      - Laser?
+        - no gravity!
+        - would it be short burts of a beam?
+        - "light speed" or something that travels?
+        - how would it be meaningfully different from rifle?
+        - Maybe something cooler, like lightning
+    - Enemy bots
+      - Sit there and return fire, at least
+      - Players take damage
+        - Bleed when hit (add blood particles like shells)
+        - Explode in gibs when killed (gibs should also bleed for a bit, at least while airborne)
+      - Move around somehow
+        - Pick direction, jump or rope when hit obstacle?
+        - How to meaningfully navigate world?
+    - Visual
+      - In theory it would be cool to be an animated slug
+        - In practice, this is probably a rabbit hole that will burn me out
+      - Maybe just add arms and a gun and an eye to the circle I have now?
+        - Smiley wars style
 
+  - NOW: Placeholder gun
 
 11/12:
   - Integrate roll and bounce test into main game
