@@ -40,6 +40,7 @@ let player = {
   isJumping: false,
   isShooting: false,
   isShootingRope: false,
+  isDigging: false,
   health: 100,
 };
 
@@ -50,6 +51,7 @@ const PlayerMoveSpeed = 0.03;
 const PlayerJumpSpeed = 0.1;
 const PlayerRopeNudgeSpeed = 0.001;
 const PlayerRopeLengthSpeed = 0.075;
+const PlayerDigDistance = 2;
 
 const MoveMaxSlope = 1;
 const GroundSnapDist = 1;
@@ -274,21 +276,20 @@ gameCanvas.update = ( dt ) => {
     //
     // Other actions
     //
+    const lookVec = [ Math.cos( entity.lookAngle ), Math.sin( entity.lookAngle ) ];
 
     if ( entity.isShooting ) {
       // Bullet first...
-      const lineVec = [ Math.cos( entity.lookAngle ), Math.sin( entity.lookAngle ) ];
-
       newEntities.push( {
         type: 'bullet',
-        pos: vec2.scaleAndAdd( [], entity.pos, lineVec, entity.radius ),
-        vel: vec2.scaleAndAdd( [], entity.vel, lineVec, BulletSpeed ),
+        pos: vec2.scaleAndAdd( [], entity.pos, lookVec, entity.radius ),
+        vel: vec2.scaleAndAdd( [], entity.vel, lookVec, BulletSpeed ),
         radius: 1,
         health: 1,
       } );
 
       // ...then recoil...
-      vec2.scaleAndAdd( entity.vel, entity.vel, lineVec, -BulletRecoil );
+      vec2.scaleAndAdd( entity.vel, entity.vel, lookVec, -BulletRecoil );
 
       // ...then casing (so it includes recoil)
       const isFacingLeft = entity.lookAngle < -Math.PI / 2 || Math.PI / 2 < entity.lookAngle;
@@ -310,12 +311,10 @@ gameCanvas.update = ( dt ) => {
     if ( entity.isShootingRope ) {
       delete entity.rope;
 
-      const lineVec = [ Math.cos( entity.lookAngle ), Math.sin( entity.lookAngle ) ];
-
       newEntities.push( {
         type: 'rope',
-        pos: vec2.scaleAndAdd( [], entity.pos, lineVec, entity.radius ),
-        vel: vec2.scale( [], lineVec, RopeSpeed ),
+        pos: vec2.scaleAndAdd( [], entity.pos, lookVec, entity.radius ),
+        vel: vec2.scale( [], lookVec, RopeSpeed ),
         rot: 0,
         rotVel: 0.001,
         radius: 1,
@@ -326,9 +325,15 @@ gameCanvas.update = ( dt ) => {
       entity.isShootingRope = false;  // one rope per right-click
     }
 
-      // Jumping cancels rope
+    // Jumping cancels rope
     if ( entity.isJumping && entity.rope ) {
       delete entity.rope;
+    }
+
+    // TODO: Time delay between digs, like guns?
+    if ( entity.isDigging ) {
+      const digPos = vec2.scaleAndAdd( [], entity.pos, lookVec, PlayerDigDistance );
+      MaskMap.setTerrainCircle( map, digPos[ 0 ], digPos[ 1 ], entity.radius * 1.1, Terrain.Empty );
     }
   } );
 
@@ -363,9 +368,10 @@ gameCanvas.draw = ( ctx ) => {
 
 
 
-const keyInput = new KeyInput( /*() => { gameCanvas.update( 10 ); gameCanvas.redraw() }*/ );
+// const keyInput = new KeyInput( /*() => { gameCanvas.update( 10 ); gameCanvas.redraw() }*/ );
 
-keyInput.Keys = {
+// keyInput.Keys = {
+const Keys = {
   PlayerUp: 'w',
   PlayerLeft: 'a',
   PlayerDown: 's',
@@ -374,15 +380,68 @@ keyInput.Keys = {
   ToggleUpdates: 'p',
 };
 
-keyInput.Actions = {
-  PlayerUp:     x => player.isMovingUp = x,
-  PlayerLeft:   x => player.isMovingLeft = x,
-  PlayerDown:   x => player.isMovingDown = x,
-  PlayerRight:  x => player.isMovingRight = x,
-  PlayerJump:   x => player.isJumping = x,
+document.addEventListener( 'keydown', e => {
+  if ( e.key === Keys.PlayerJump )  player.isJumping = true;
 
-  ToggleUpdates: x => { if ( x ) gameCanvas.toggle() },
-};
+  else if ( e.key === Keys.PlayerUp )    player.isMovingUp   = true;
+  else if ( e.key === Keys.PlayerDown )  player.isMovingDown = true;
+
+  else if ( e.key === Keys.PlayerLeft ) {
+    if ( player.isMovingRight ) {
+      player.isDigging = true;
+    }
+    else {
+      player.isMovingLeft = true;
+    }
+  }
+
+  else if ( e.key === Keys.PlayerRight ) {
+    if ( player.isMovingLeft ) {
+      player.isDigging = true;
+    }
+    else {
+      player.isMovingRight = true;
+    }
+  }
+
+  else if ( e.key === Keys.ToggleUpdates )  gameCanvas.toggle();
+
+} );
+
+document.addEventListener( 'keyup', e => {
+  if ( e.key === Keys.PlayerJump )  player.isJumping = false;
+
+  else if ( e.key === Keys.PlayerUp )    player.isMovingUp   = false;
+  else if ( e.key === Keys.PlayerDown )  player.isMovingDown = false;
+
+  else if ( e.key === Keys.PlayerLeft ) {
+    player.isMovingLeft = false;
+
+    if ( player.isDigging ) {
+      player.isDigging = false;
+      player.isMovingRight = true;
+    }
+  }
+  else if ( e.key === Keys.PlayerRight ) {
+    player.isMovingRight = false;
+
+    if ( player.isDigging ) {
+      player.isDigging = false;
+      player.isMovingLeft = true;
+    }
+  }
+} );
+
+// keyInput.Actions = {
+//   PlayerUp:     x => player.isMovingUp = x,
+//   PlayerLeft:   x => player.isMovingLeft = x,
+//   PlayerDown:   x => player.isMovingDown = x,
+//   PlayerRight:  x => player.isMovingRight = x,
+//   PlayerJump:   x => player.isJumping = x,
+
+//   ToggleUpdates: x => { if ( x ) gameCanvas.toggle() },
+// };
+
 
 document.addEventListener( 'pointerdown', e => {
   player.isShooting = e.buttons & 1;
