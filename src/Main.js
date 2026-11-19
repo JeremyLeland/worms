@@ -48,7 +48,7 @@ const debugInfo = {};
 
 const Gravity = 0.0005;
 const PlayerMoveSpeed = 0.03;
-const PlayerJumpSpeed = 0.1;
+const PlayerJumpSpeed = 0.12;
 const PlayerRopeNudgeSpeed = 0.001;
 const PlayerRopeLengthSpeed = 0.075;
 const PlayerDigDistance = 2;

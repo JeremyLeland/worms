@@ -22,9 +22,34 @@ export function drawEntities( ctx, entities ) {
         ctx.arc( 0, 0, entity.radius, 0, Math.PI * 2 );
         ctx.fill();
 
-        ctx.rotate( entity.lookAngle );
-        ctx.fillStyle = 'lightgray';
-        ctx.fillRect( 0, -GunHeight / 2, GunLength, GunHeight );
+        // ctx.save(); {
+          // ctx.rotate( entity.lookAngle );
+
+          const isFacingLeft = Math.PI / 2 < Math.abs( entity.lookAngle );
+
+          if ( isFacingLeft ) {
+            ctx.scale( -1, 1 );
+            ctx.rotate( Math.PI - entity.lookAngle );
+          }
+          else {
+            ctx.rotate( entity.lookAngle );
+          }
+
+          ctx.fillStyle = 'lightgray';
+          ctx.fillRect( 0, -GunHeight / 2, GunLength, GunHeight );
+
+          ctx.fillStyle = 'white';
+          ctx.beginPath();
+          ctx.arc( 3, -4, 2, 0, Math.PI * 2 );
+          ctx.fill();
+
+          ctx.fillStyle = 'black';
+          ctx.beginPath();
+          ctx.arc( 3.6, -3.9, 1.3, 0, Math.PI * 2 );
+          ctx.fill();
+
+        // }
+        // ctx.restore();
       }
       ctx.restore();
     }
