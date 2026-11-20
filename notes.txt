@@ -1,3 +1,23 @@
+11/19:
+  - Bullet trails
+    - Start by saving the trail in the bullet
+      - Deal with what happens when bullet vanishes later
+        - Keep track of trail length, reduce it as we go?
+          - What if we keep moving main bullet and calculating length from there?
+            - Just don't draw it or do any more collision with it
+      - Right now, I'm being cheap and just drawing line through trail
+      - If I wanted to be fancy, I should make a path that narrows to a point
+        - Would probably look better
+  
+11/18:
+  - Dig
+    - Add isDigging boolean
+    - If digging, cut out a circle slightly in front of us
+    - Do this only when button is first pressed, like liero?
+      - Or let them hold it down?
+    - If I make dig of exact size circle, it's less smooth to get around
+      - But if I make it bigger than us, then we always move slightly downward when facing stright right
+
 11/17:
   - DONE: Add rope back in
   - Outstanding movement issues:

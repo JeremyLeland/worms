@@ -17,6 +17,8 @@ MaskMap.setTerrainCircle( map, 30, 30, 30, 0 );
 MaskMap.setTerrainCircle( map, 80, 40, 60, 0 );
 MaskMap.setTerrainCircle( map, 120, 60, 30, 0 );
 
+MaskMap.setTerrainCircle( map, 150, 70, 70, 0 );
+
 // MaskMap.setTerrainCircle( map, 40, 40, 10, 1 );
 // MaskMap.setTerrainCircle( map, 74, 50, 30, 1 );
 // MaskMap.setTerrainCircle( map, 100, 45, 20, 1 );
@@ -58,10 +60,12 @@ const GroundSnapDist = 1;
 
 const BulletSpeed = 0.5;
 const BulletRecoil = 0.01;
-const RopeSpeed = 0.4;
+const BulletTrailLength = 50;
+
 const CasingSpeed = 0.1;
 const CasingRotSpeed = 0.02;
 
+const RopeSpeed = 0.4;
 const RopeSpringConstant = 0.0001;
 const RopeSpringDamping = 0.01;     // Critical Damping: 2 * sqrt( k * m ), trying 0.5 * critical damping
 const RopeSwingDamping = 0.001;
@@ -306,6 +310,9 @@ gameCanvas.update = ( dt ) => {
         radius: 1,
         health: 1,
       } );
+
+      // TODO: Bullet delays. For now, make us click each time.
+      entity.isShooting = false;
     }
 
     if ( entity.isShootingRope ) {
@@ -334,6 +341,28 @@ gameCanvas.update = ( dt ) => {
     if ( entity.isDigging ) {
       const digPos = vec2.scaleAndAdd( [], entity.pos, lookVec, PlayerDigDistance );
       MaskMap.setTerrainCircle( map, digPos[ 0 ], digPos[ 1 ], entity.radius * 1.1, Terrain.Empty );
+    }
+
+    // Update bullet trail
+    if ( entity.type === 'bullet' ) {
+      entity.trail ??= [];
+      entity.trail.unshift( vec2.clone( entity.pos ) );
+
+      // Remove/adjust end of tail to match max length
+      let length = 0;
+
+      for ( let i = 1; i < entity.trail.length; i ++ ) {
+        const subVec = vec2.subtract( [], entity.trail[ i ], entity.trail[ i - 1 ] );
+        const subLength = vec2.length( subVec );
+        length += subLength;
+
+        const remaining = BulletTrailLength - length;
+        if ( remaining < 0 ) {
+          vec2.scaleAndAdd( entity.trail[ i ], entity.trail[ i ], subVec, remaining / length );
+
+          entity.trail.splice( i + 1 );
+        }
+      }
     }
   } );
 
@@ -378,6 +407,7 @@ const Keys = {
   PlayerRight: 'd',
   PlayerJump: ' ',
   ToggleUpdates: 'p',
+  StepFrame: 'o',
 };
 
 document.addEventListener( 'keydown', e => {
@@ -405,6 +435,10 @@ document.addEventListener( 'keydown', e => {
   }
 
   else if ( e.key === Keys.ToggleUpdates )  gameCanvas.toggle();
+  else if ( e.key === Keys.StepFrame ) {
+    gameCanvas.update( 10 );
+    gameCanvas.redraw();
+  }
 
 } );
 

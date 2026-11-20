@@ -54,8 +54,21 @@ export function drawEntities( ctx, entities ) {
       ctx.restore();
     }
     else if ( entity.type === 'bullet' ) {
-      ctx.fillStyle = 'white';
-      Util.drawPoint( ctx, entity.pos, entity.radius );
+      if ( entity.trail ) {
+        ctx.fillStyle = 'white';
+        // Debug the bullet pos
+        // Util.drawPoint( ctx, entity.pos, entity.radius );
+
+        // Debug the trail points
+        // entity.trail.forEach( p => Util.drawPoint( ctx, p, 1 ) );
+
+        ctx.strokeStyle = '#fff9';
+        ctx.lineWidth = entity.radius;
+
+        ctx.beginPath();
+        entity.trail.forEach( p => ctx.lineTo( ...p ) );
+        ctx.stroke();
+      }
     }
     else if ( entity.type === 'casing' ) {
       ctx.save(); {
