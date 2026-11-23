@@ -1,3 +1,27 @@
+11/22:
+  - Bullet trails
+    - How to finish off the trail when bullet hits wall
+      - Update points in trail?
+        - Wouldn't work for a trail that was actor-controlled
+          - Just assume actor keeps going in same direction after it dies?
+      - What if trail pieces were like particles?
+        - Keep their location, shrink with time
+          - Then they don't care what happens to the head
+          - Trails would be time based instead of distance based
+            - Would need to keep track of a time for each point
+            - as opposed to a single length for each trail
+      - You either have to update a location and figure out length
+      - Or update a length (and figure out how much to shorten it by)
+        - keep shortening it by the old velocity from time of impact?
+          - this gets weird about whether you are lengthening or shortening, though
+          - I'm kind of liking the simplicity of a bunch of particles
+
+    - Trying some different trail tests
+      - Shrinking particles in place
+        - Seems like this would make the tail suddenly shorten as sizes hit zero
+          - What if we keep them around after size hits zero?
+            - Can we use negative radius to find where intersection would be to draw end of tail?
+
 11/19:
   - Bullet trails
     - Start by saving the trail in the bullet
