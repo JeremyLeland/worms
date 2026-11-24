@@ -15,7 +15,36 @@ export function pointDistToLineSegment( x, y, x1, y1, x2, y2 ) {
   return Math.hypot( x - closestX, y - closestY );
 }
 
-// NOTE: The epsilons are important, really! 
+export function getLineIntersection( x1, y1, x2, y2, x3, y3, x4, y4 ) {
+  const D = ( y4 - y3 ) * ( x2 - x1 ) - ( x4 - x3 ) * ( y2 - y1 );
+
+  if ( D != 0 ) {
+    const uA = ( ( x4 - x3 ) * ( y1 - y3 ) - ( y4 - y3 ) * ( x1 - x3 ) ) / D;
+    const uB = ( ( x2 - x1 ) * ( y1 - y3 ) - ( y2 - y1 ) * ( x1 - x3 ) ) / D;
+
+    // Bounds check uB here so we can just return uA
+    if ( 0 <= uB && uB <= 1 ) {
+      // return uA;
+
+      return [
+        x1 + ( x2 - x1 ) * uA,
+        y1 + ( y2 - y1 ) * uA,
+      ];
+    }
+    // return {
+    //   uA: uA,
+    //   uB: uB,
+    //   // position: {
+    //   //   x: x1 + ( x2 - x1 ) * uA,
+    //   //   y: y1 + ( y2 - y1 ) * uA,
+    //   // }
+    // }
+  }
+
+  // return Infinity;
+}
+
+// NOTE: The epsilons are important, really!
 // You're always tempted to just use zero, but the use of EPISILON is the result of a lot of blood, sweat, and debugging
 const EPSILON = 1e-6;
 
@@ -131,11 +160,11 @@ function timeToCircleHitPoint( x, y, dx, dy, radius, cx, cy ) {
   if ( vDotN >= 0 ) {
     return Infinity;
   }
-   
+
   const a = dX * dX + dY * dY;
   const b = 2 * ( fX * dX + fY * dY );
   const c = ( fX * fX + fY * fY ) - Math.pow( radius, 2 );
-  
+
   return solveQuadratic( a, b, c );
 }
 
@@ -161,7 +190,7 @@ function solveQuadratic( A, B, C ) {
 
     let closest = Infinity;
 
-    // Should I make this Math.abs( disc ) < EPSILON like above? 
+    // Should I make this Math.abs( disc ) < EPSILON like above?
     if ( -EPSILON < disc && disc < 0 ) {
       disc = 0;
       // debugger;

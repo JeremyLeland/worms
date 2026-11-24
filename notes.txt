@@ -1,3 +1,8 @@
+11/24:
+  - Bullet trails
+    - Fixed tail for trails in test
+      - finding collision negative left/right values and previous left/right values
+
 11/22:
   - Bullet trails
     - How to finish off the trail when bullet hits wall

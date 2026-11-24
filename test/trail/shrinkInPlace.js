@@ -1,33 +1,24 @@
 // Try a trail made up of particles that shrink over time
 // This avoids increasing/decreasing length calculations
 // ...but potentially has jittery tail
-
-import * as Worms from '../../src/Worms.js';
+//      - fixed by checking line collisions! Looks pretty good, I think
 
 import * as Collisions from '../../src/common/Collisions.js';
 import { GameCanvas } from '../../src/common/GameCanvas.js';
-import { KeyInput } from '../../src/common/KeyInput.js';
-import * as Util from '../../src/common/Util.js';
 import { vec2 } from '../../lib/gl-matrix.js';
 
 
-const trail = [
-  {
-    pos: [ 30, 30 ],
-    vel: [ 1, 1 ],
-    life: 3000,
-  },
-  {
-    pos: [ 20, 20 ],
-    vel: [ 1, 1 ],
-    life: 2000,
-  },
-  {
-    pos: [ 10, 10 ],
-    vel: [ 1, 1 ],
-    life: 1000,
-  },
-];
+const trail = [];
+
+for ( let i = 1; i < 10; i ++ ) {
+  trail.unshift(
+    {
+      pos: [ i * 10, i * 10 ],
+      vel: [ 1, 1 ],
+      life: i * 1000,
+    }
+  );
+}
 
 const gameCanvas = new GameCanvas();
 gameCanvas.setBounds( 0, 0, 100, 100 );
@@ -47,9 +38,13 @@ gameCanvas.draw = ( ctx ) => {
   ctx.fillStyle = "#123";
   ctx.fillRect( 0, 0, ctx.canvas.width, ctx.canvas.height );
 
-  const points = [];
+  ctx.lineWidth = 0.2;
 
-  for ( let i = trail.length - 1; i > 0; i -- ) {
+  // NOTE: store rightPoints in reverse (so we can draw them in order when completing second half of path)
+  const leftPoints = [];
+  const rightPoints = [];
+
+  for ( let i = 0; i < trail.length; i ++ ) {
     const part = trail[ i ];
 
     const normal = [ -part.vel[ 1 ], part.vel[ 0 ] ];
@@ -59,12 +54,31 @@ gameCanvas.draw = ( ctx ) => {
 
     // Util.drawPoint( ctx, part.pos, part.life / 1000 );
 
-    // if ( part.life > 0 ) {
-      const left  = vec2.scaleAndAdd( [], part.pos, normal, -radius );
-      const right = vec2.scaleAndAdd( [], part.pos, normal, radius );
+    const left  = vec2.scaleAndAdd( [], part.pos, normal, -radius );
+    const right = vec2.scaleAndAdd( [], part.pos, normal, radius );
 
-      points.unshift( left );
-      points.push( right );
+    if ( part.life < 0 ) {
+      if ( trail.length > 1 ) {
+
+        // ctx.strokeStyle = 'orange';
+        // Util.drawLine( ctx, right, rightPoints.at( 0 ) );
+        // ctx.strokeStyle = 'yellow';
+        // Util.drawLine( ctx, left, leftPoints.at( -1 ) );
+
+        // NOTE: Right points are stored in reverse, so use first instead of last
+        const end = Collisions.getLineIntersection( ...left, ...leftPoints.at( -1 ), ...rightPoints.at( 0 ), ...right );
+
+        if ( end ) {
+          leftPoints.push( end );
+
+          // ctx.fillStyle = 'red';
+          // Util.drawPoint( ctx, end, 0.3 );
+        }
+      }
+    }
+    else {
+      leftPoints.push( left );
+      rightPoints.unshift( right );
 
       // ctx.fillStyle = 'green';
       // Util.drawPoint( ctx, left, 1 );
@@ -73,13 +87,16 @@ gameCanvas.draw = ( ctx ) => {
 
       // ctx.strokeStyle = part.life < 0 ? 'red' : 'gray';
       // Util.drawLine( ctx, left, right );
-    // }
+    }
   }
 
   ctx.beginPath();
-  points.forEach( p => ctx.lineTo( ...p ) );
+  leftPoints.forEach( p => ctx.lineTo( ...p ) );
+  rightPoints.forEach( p => ctx.lineTo( ...p ) );
 
-  ctx.strokeStyle = '#aaaa';
+  ctx.fillStyle = '#aaaa';
+  ctx.fill();
+  ctx.strokeStyle = 'white';
   ctx.stroke();
 }
 
