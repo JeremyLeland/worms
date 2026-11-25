@@ -2,6 +2,10 @@
   - Bullet trails
     - Fixed tail for trails in test
       - finding collision negative left/right values and previous left/right values
+    - Integrate into main
+      - Put the adding points code back up in main bullet update?
+        - We want to make sure we are adding bullets last location to trail so there's no gap
+      - Stop drawing bullets after they die?
 
 11/22:
   - Bullet trails

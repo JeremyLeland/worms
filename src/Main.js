@@ -96,6 +96,10 @@ gameCanvas.update = ( dt ) => {
 
   entities.forEach( entity => {
 
+    if ( entity.health <= 0 ) {
+      return;
+    }
+
     //
     // Forces
     //
@@ -190,6 +194,18 @@ gameCanvas.update = ( dt ) => {
         vec2.scaleAndAdd( entity.pos, entity.pos, entity.vel, hit.time );
         timeLeft -= hit.time;
 
+        //
+        // Some bullets immediately die (so skip everything else)
+        //
+        if ( entity.type === 'bullet' ) {
+          entity.health = 0;
+
+          // TODO: Should these changes be made outside the update?
+          MaskMap.setTerrainCircle( map, entity.pos[ 0 ], entity.pos[ 1 ], entity.radius * 4, Terrain.Empty );
+
+          break;
+        }
+
         const groundNormal = vec2.sub( [], entity.pos, hit.pos );
         vec2.normalize( groundNormal, groundNormal );
 
@@ -242,13 +258,7 @@ gameCanvas.update = ( dt ) => {
         //
         // Collision response for other entities
         //
-        if ( entity.type === 'bullet' ) {
-          entity.health = 0;
-
-          // TODO: Should these changes be made outside the update?
-          MaskMap.setTerrainCircle( map, entity.pos[ 0 ], entity.pos[ 1 ], entity.radius * 4, Terrain.Empty );
-        }
-        else if ( entity.type === 'casing' ) {
+        if ( entity.type === 'casing' ) {
           entity.rotVel = 0;
         }
         else if ( entity.type === 'rope' ) {
@@ -265,6 +275,7 @@ gameCanvas.update = ( dt ) => {
       }
       else {
         vec2.scaleAndAdd( entity.pos, entity.pos, entity.vel, timeLeft );
+
         break;
       }
     }
@@ -273,9 +284,20 @@ gameCanvas.update = ( dt ) => {
       entity.rot += entity.rotVel * dt;
     }
 
+    if ( entity.trail ) {
+      entity.trail.unshift(
+        {
+          pos: vec2.clone( entity.pos ),
+          vel: vec2.clone( entity.vel ),
+          life: Worms.BulletTrailLife,
+        }
+      );
+    }
+
     if ( entity.id === 'player1' ) {
       entity.lookAngle = Math.atan2( mousePos[ 1 ] - entity.pos[ 1 ], mousePos[ 0 ] - entity.pos[ 0 ] );
     }
+
 
     //
     // Other actions
@@ -290,6 +312,7 @@ gameCanvas.update = ( dt ) => {
         vel: vec2.scaleAndAdd( [], entity.vel, lookVec, BulletSpeed ),
         radius: 1,
         health: 1,
+        trail: [],
       } );
 
       // ...then recoil...
@@ -342,32 +365,36 @@ gameCanvas.update = ( dt ) => {
       const digPos = vec2.scaleAndAdd( [], entity.pos, lookVec, PlayerDigDistance );
       MaskMap.setTerrainCircle( map, digPos[ 0 ], digPos[ 1 ], entity.radius * 1.1, Terrain.Empty );
     }
+  } );
 
-    // Update bullet trail
+  // Update bullet trails
+  entities.forEach( entity => {
     if ( entity.type === 'bullet' ) {
-      entity.trail ??= [];
-      entity.trail.unshift( vec2.clone( entity.pos ) );
+      // entity.trail ??= [];
 
-      // Remove/adjust end of tail to match max length
-      let length = 0;
+      entity.trail.forEach( part => part.life -= dt );
 
-      for ( let i = 1; i < entity.trail.length; i ++ ) {
-        const subVec = vec2.subtract( [], entity.trail[ i ], entity.trail[ i - 1 ] );
-        const subLength = vec2.length( subVec );
-        length += subLength;
+      // Trim old particles (leave one negative life behind to figure out the tail)
+      const firstNegative = entity.trail.findIndex( e => e.life < 0 );
 
-        const remaining = BulletTrailLength - length;
-        if ( remaining < 0 ) {
-          vec2.scaleAndAdd( entity.trail[ i ], entity.trail[ i ], subVec, remaining / length );
-
-          entity.trail.splice( i + 1 );
-        }
+      if ( firstNegative > -1 ) {
+        entity.trail.splice( firstNegative + 1 );
       }
+
+      // if ( entity.health > 0 ) {
+      //   entity.trail.unshift(
+      //     {
+      //       pos: vec2.clone( entity.pos ),
+      //       vel: vec2.clone( entity.vel ),
+      //       life: Worms.BulletTrailLife,
+      //     }
+      //   );
+      // }
     }
   } );
 
   // Remove expired entities
-  entities = entities.filter( e => e.health > 0 );
+  entities = entities.filter( e => e.health > 0 || e.trail );
 
   // Add new entities
   entities.push( ...newEntities );

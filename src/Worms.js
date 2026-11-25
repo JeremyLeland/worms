@@ -7,6 +7,8 @@ import { vec2 } from '../lib/gl-matrix.js';
 const GunLength = 12;
 const GunHeight = 2;
 
+export const BulletTrailLife = 150;
+
 export function drawEntities( ctx, entities ) {
   entities.forEach( entity => {
     if ( entity.type === 'player' ) {
@@ -54,20 +56,18 @@ export function drawEntities( ctx, entities ) {
       ctx.restore();
     }
     else if ( entity.type === 'bullet' ) {
-      if ( entity.trail ) {
-        ctx.fillStyle = 'white';
-        // Debug the bullet pos
-        // Util.drawPoint( ctx, entity.pos, entity.radius );
+      // Debug the bullet pos
+      // if ( entity.health > 0 ) {
+      //   ctx.fillStyle = 'white';
+      //   Util.drawPoint( ctx, entity.pos, entity.radius );
+      // }
 
+      if ( entity.trail ) {
         // Debug the trail points
         // entity.trail.forEach( p => Util.drawPoint( ctx, p, 1 ) );
 
-        ctx.strokeStyle = '#fff9';
-        ctx.lineWidth = entity.radius;
-
-        ctx.beginPath();
-        entity.trail.forEach( p => ctx.lineTo( ...p ) );
-        ctx.stroke();
+        ctx.fillStyle = '#fff9';
+        drawTrail( ctx, entity.trail, entity.radius, BulletTrailLife );
       }
     }
     else if ( entity.type === 'casing' ) {
@@ -97,6 +97,45 @@ function drawRope( ctx, from, to ) {
   ctx.lineWidth = 0.4;
   Util.drawLine( ctx, from, to );
   // Util.drawLinePixel( ctx, from, to );
+}
+
+function drawTrail( ctx, trail, startRadius, startLife ) {
+  // NOTE: store rightPoints in reverse (so we can draw them in order when completing second half of path)
+    const leftPoints = [];
+    const rightPoints = [];
+
+    for ( let i = 0; i < trail.length; i ++ ) {
+      const part = trail[ i ];
+
+      const normal = [ -part.vel[ 1 ], part.vel[ 0 ] ];
+      vec2.normalize( normal, normal );
+
+      const radius = startRadius * part.life / startLife;
+
+      const left  = vec2.scaleAndAdd( [], part.pos, normal, -radius );
+      const right = vec2.scaleAndAdd( [], part.pos, normal, radius );
+
+      if ( part.life < 0 ) {
+        if ( trail.length > 1 ) {
+
+          // NOTE: Right points are stored in reverse, so use first instead of last
+          const end = Collisions.getLineIntersection( ...left, ...leftPoints.at( -1 ), ...rightPoints.at( 0 ), ...right );
+
+          if ( end ) {
+            leftPoints.push( end );
+          }
+        }
+      }
+      else {
+        leftPoints.push( left );
+        rightPoints.unshift( right );
+      }
+    }
+
+    ctx.beginPath();
+    leftPoints.forEach( p => ctx.lineTo( ...p ) );
+    rightPoints.forEach( p => ctx.lineTo( ...p ) );
+    ctx.fill();
 }
 
 export function getTouch( map, entity, touchDist, debugCtx ) {
