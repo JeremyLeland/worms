@@ -32,9 +32,18 @@ let player = {
     pos: [ 100, 0 ],
     length: 50,
   },
-  lookAngle: 0,
+  health: 100,
   radius: 8,
   color: 'green',
+
+  weapon: {
+    type: 'rifle',
+    shotsLeft: 10,
+    delay: 0,
+  },
+
+  lookAngle: 0,
+
   isMovingUp: false,
   isMovingLeft: false,
   isMovingDown: false,
@@ -43,7 +52,6 @@ let player = {
   isShooting: false,
   isShootingRope: false,
   isDigging: false,
-  health: 100,
 };
 
 const debugInfo = {};
@@ -61,6 +69,9 @@ const GroundSnapDist = 1;
 const BulletSpeed = 0.5;
 const BulletRecoil = 0.01;
 const BulletTrailLength = 50;
+
+const RifleDelay = 150;
+const RifleReload = 1000;
 
 const CasingSpeed = 0.1;
 const CasingRotSpeed = 0.02;
@@ -294,6 +305,12 @@ gameCanvas.update = ( dt ) => {
       );
     }
 
+    if ( entity.weapon ) {
+      if ( entity.weapon.delay > 0 ) {
+        entity.weapon.delay -= dt;
+      }
+    }
+
     if ( entity.id === 'player1' ) {
       entity.lookAngle = Math.atan2( mousePos[ 1 ] - entity.pos[ 1 ], mousePos[ 0 ] - entity.pos[ 0 ] );
     }
@@ -304,7 +321,7 @@ gameCanvas.update = ( dt ) => {
     //
     const lookVec = [ Math.cos( entity.lookAngle ), Math.sin( entity.lookAngle ) ];
 
-    if ( entity.isShooting ) {
+    if ( entity.isShooting && entity.weapon.delay <= 0 ) {
       // Bullet first...
       newEntities.push( {
         type: 'bullet',
@@ -334,8 +351,7 @@ gameCanvas.update = ( dt ) => {
         health: 1,
       } );
 
-      // TODO: Bullet delays. For now, make us click each time.
-      entity.isShooting = false;
+      entity.weapon.delay += RifleDelay;
     }
 
     if ( entity.isShootingRope ) {
