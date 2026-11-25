@@ -1,3 +1,10 @@
+11/25:
+  - Enemy bot we can shoot at for practice
+    - Eventually it'll need to move and shoot back
+    - This lets us test collision, at least
+    - Helper function to create Players
+    - Move a bunch of stuff over to Worms.js?
+
 11/24:
   - Bullet trails
     - Fixed tail for trails in test

@@ -23,36 +23,65 @@ MaskMap.setTerrainCircle( map, 150, 70, 70, 0 );
 // MaskMap.setTerrainCircle( map, 74, 50, 30, 1 );
 // MaskMap.setTerrainCircle( map, 100, 45, 20, 1 );
 
-let player = {
-  type: 'player',
-  id: 'player1',
-  pos: [ 135, 50 ],
-  vel: [ 0, 0 ],
-  rope: {
-    pos: [ 100, 0 ],
-    length: 50,
-  },
-  health: 100,
-  radius: 8,
-  color: 'green',
+let player = createPlayer(
+  {
+    id: 'player1',
+    pos: [ 180, 50 ],
+    rope: {
+      pos: [ 150, 0 ],
+      length: 70,
+    },
+    color: 'green',
+  }
+);
+let player2 = createPlayer(
+  {
+    id: 'player2',
+    pos: [ 35, 50 ],
+    rope: {
+      pos: [ 50, 0 ],
+      length: 40,
+    },
+    color: 'teal',
+  }
+);
 
-  weapon: {
-    type: 'rifle',
-    shotsLeft: 10,
-    delay: 0,
-    isReloading: false,
-  },
+function createPlayer( vals ) {
+  const player = {
+    type: 'player',
+    // id: 'player1',
+    pos: [ 0, 0 ],
+    vel: [ 0, 0 ],
+    // rope: {
+    //   pos: [ 100, 0 ],
+    //   length: 50,
+    // },
+    health: 100,
+    radius: 8,
+    color: 'gray',
 
-  lookAngle: 0,
+    weapon: {
+      type: 'rifle',
+      shotsLeft: 10,
+      delay: 0,
+      isReloading: false,
+    },
 
-  isMovingUp: false,
-  isMovingLeft: false,
-  isMovingDown: false,
-  isMovingRight: false,
-  isJumping: false,
-  isShooting: false,
-  isShootingRope: false,
-  isDigging: false,
+    lookAngle: 0,
+
+    isMovingUp: false,
+    isMovingLeft: false,
+    isMovingDown: false,
+    isMovingRight: false,
+    isJumping: false,
+    isShooting: false,
+    isShootingRope: false,
+    isDigging: false,
+  }
+
+  Object.assign( player, vals );
+
+  return player;
 };
 
 const debugInfo = {};
@@ -84,7 +113,7 @@ const RopeSwingDamping = 0.001;
 
 const mousePos = [ 20.4, 20 ];
 
-let entities = [ player ];
+let entities = [ player, player2 ];
 
 
 const backgroundImage = new OffscreenCanvas( map.cols, map.rows );
