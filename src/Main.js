@@ -40,6 +40,7 @@ let player = {
     type: 'rifle',
     shotsLeft: 10,
     delay: 0,
+    isReloading: false,
   },
 
   lookAngle: 0,
@@ -68,10 +69,10 @@ const GroundSnapDist = 1;
 
 const BulletSpeed = 0.5;
 const BulletRecoil = 0.01;
-const BulletTrailLength = 50;
 
-const RifleDelay = 150;
-const RifleReload = 1000;
+const RifleShots = 10;
+const RifleShootDelay = 150;
+const RifleReloadDelay = 2000;
 
 const CasingSpeed = 0.1;
 const CasingRotSpeed = 0.02;
@@ -308,6 +309,11 @@ gameCanvas.update = ( dt ) => {
     if ( entity.weapon ) {
       if ( entity.weapon.delay > 0 ) {
         entity.weapon.delay -= dt;
+
+        if ( entity.weapon.delay <= 0 && entity.weapon.isReloading ) {
+          entity.weapon.shotsLeft += RifleShots;
+          entity.weapon.isReloading = false;
+        }
       }
     }
 
@@ -351,7 +357,14 @@ gameCanvas.update = ( dt ) => {
         health: 1,
       } );
 
-      entity.weapon.delay += RifleDelay;
+      entity.weapon.shotsLeft --;
+      if ( entity.weapon.shotsLeft > 0 ) {
+        entity.weapon.delay += RifleShootDelay;
+      }
+      else {
+        entity.weapon.delay += RifleReloadDelay;
+        entity.weapon.isReloading = true;
+      }
     }
 
     if ( entity.isShootingRope ) {
