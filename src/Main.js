@@ -2,6 +2,7 @@ import * as MaskMap from '../src/MaskMap.js';
 import * as Worms from './Worms.js';
 
 import { GameCanvas } from '../src/common/GameCanvas.js';
+import * as Collisions from '../src/common/Collisions.js';
 import { KeyInput } from '../src/common/KeyInput.js';
 import { vec2 } from '../lib/gl-matrix.js';
 
@@ -98,6 +99,7 @@ const GroundSnapDist = 1;
 
 const BulletSpeed = 0.5;
 const BulletRecoil = 0.01;
+const BulletImpactForce = 0.05;
 
 const RifleShots = 10;
 const RifleShootDelay = 150;
@@ -229,9 +231,30 @@ gameCanvas.update = ( dt ) => {
 
     for ( let step = 0; step < 2; step ++ ) {
 
-      const hit = Worms.getHit( map, entity, timeLeft );
+      let hit = Worms.getMapHit( map, entity, timeLeft );
 
-      if ( /*0 < bestHit.time &&*/ hit.time < timeLeft ) {
+      if ( entity.type === 'bullet' ) {
+        // TODO: Make more general, move to Worms.js?
+        const player2HitTime = Collisions.timeToCircleHitCircle(
+          ...entity.pos, ...entity.vel, entity.radius,
+          ...player2.pos, ...player2.vel, player2.radius,
+        );
+
+        if ( player2HitTime < timeLeft && player2HitTime < hit.time ) {
+          console.log( 'bullet hit player 2' );
+
+          vec2.scaleAndAdd( entity.pos, entity.pos, entity.vel, player2HitTime );
+
+          vec2.scaleAndAdd( player2.vel, player2.vel, entity.vel, BulletImpactForce );
+
+          entity.health = 0;
+
+          break;
+        }
+      }
+
+
+      if ( hit.time < timeLeft ) {
         vec2.scaleAndAdd( entity.pos, entity.pos, entity.vel, hit.time );
         timeLeft -= hit.time;
 

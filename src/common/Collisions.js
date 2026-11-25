@@ -168,6 +168,35 @@ function timeToCircleHitPoint( x, y, dx, dy, radius, cx, cy ) {
   return solveQuadratic( a, b, c );
 }
 
+// TODO: Make timeToCircleHitPoint call this version?
+//   - Figure out how to incorporate the "moving away from point" case above
+
+export function timeToCircleHitCircle( x1, y1, dx1, dy1, radius1, x2, y2, dx2, dy2, radius2 ) {
+  // Relative position
+  const px = x2 - x1;
+  const py = y2 - y1;
+
+  // Relative velocity
+  const vx = dx2 - dx1;
+  const vy = dy2 - dy1;
+
+  // Sum of radii
+  const r = radius1 + radius2;
+
+  // Quadratic coefficients
+  const A = vx * vx + vy * vy;
+  const B = 2 * ( px * vx + py * vy );
+  const C = px * px + py * py - r * r;
+
+  // Already touching or overlapping
+  if ( C <= 0 )   return 0;
+
+  // No relative movement
+  if ( A === 0 )  return Infinity;
+
+  return solveQuadratic( A, B, C );
+}
+
 // NOTE: This solver assumes we only want positive values (and returns Infinity if none available)
 
 function solveQuadratic( A, B, C ) {

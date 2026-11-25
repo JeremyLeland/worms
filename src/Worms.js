@@ -194,7 +194,7 @@ export function getTouch( map, entity, touchDist, debugCtx ) {
   return closest;
 }
 
-export function getHit( map, entity, dt, debugCtx ) {
+export function getMapHit( map, entity, dt, debugCtx ) {
   // console.log( ' getHit' );
 
   let bestHit = {

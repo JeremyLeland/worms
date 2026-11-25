@@ -4,6 +4,7 @@
     - This lets us test collision, at least
     - Helper function to create Players
     - Move a bunch of stuff over to Worms.js?
+  - Check bullets against players as well as walls
 
 11/24:
   - Bullet trails
